@@ -14,7 +14,7 @@ public class JellyfinCommands(JellyfinIntegration jellyfinIntegration)
         return $"""
         **{sysInfo.ServerName}**
         Version: {sysInfo.Version}
-        OS: {sysInfo.OperatingSystemDisplayName}
+        Product Name: {sysInfo.ProductName}
         Update Available: {sysInfo.HasUpdateAvailable}
         """;
     }

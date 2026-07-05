@@ -1,3 +1,4 @@
 $env:Discord__Token="tokenhere"
 $env:Jellyfin__Endpoint="https://endpoint/"
 $env:Jellyfin__ApiKey=""
+$env:Jellyfin__Enabled="False"

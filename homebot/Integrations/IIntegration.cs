@@ -1,7 +1,7 @@
 namespace HomeBot.Integrations;
 
-interface IIntegration
+public interface IIntegration
 {
     IIntegrationMetadata Metadata { get; }
-
+    Task InitializeAsync(CancellationToken cancellationToken);
 }

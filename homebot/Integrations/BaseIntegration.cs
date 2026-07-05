@@ -1,12 +1,22 @@
 namespace HomeBot.Integrations;
 
-public abstract class BaseIntegration : IIntegration
+public abstract class BaseIntegration<TSelf> : IIntegration
 {
     public IIntegrationMetadata Metadata { get; }
 
-    protected BaseIntegration(IIntegrationMetadata metadata)
+    protected ILogger<TSelf> Logger { get; }
+
+    protected BaseIntegration(
+        ILogger<TSelf> logger,
+        IIntegrationMetadata metadata)
     {
+        Logger = logger;
         Metadata = metadata;
     }
 
+    public virtual Task InitializeAsync(CancellationToken cancellationToken)
+        => Task.CompletedTask;
+
+    public virtual Task ShutdownAsync(CancellationToken cancellationToken)
+        => Task.CompletedTask;
 }
