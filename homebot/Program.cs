@@ -6,14 +6,30 @@ using NetCord.Hosting.Services.ApplicationCommands;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+//
+// Discord
+//
 builder.Services
     .AddDiscordGateway()
     .AddApplicationCommands();
 
-// Jellyfin Integration
-builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(builder.Configuration);
+//
+// Integrations
+//
+builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(
+    builder.Configuration);
 
+//
+// Build
+//
 var host = builder.Build();
 
+//
+// Register Discord modules
+//
 host.AddModules(typeof(Program).Assembly);
+
+//
+// Run
+//
 await host.RunAsync();

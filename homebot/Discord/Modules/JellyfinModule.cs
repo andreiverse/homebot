@@ -1,9 +1,9 @@
 using HomeBot.Integrations.Jellyfin;
 using NetCord.Services.ApplicationCommands;
 
-namespace HomeBot.Commands;
+namespace HomeBot.Discord.Modules;
 
-public class JellyfinCommands(JellyfinIntegration jellyfinIntegration)
+public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
     [SlashCommand("jellyfin", "Check Jellyfin server info")]

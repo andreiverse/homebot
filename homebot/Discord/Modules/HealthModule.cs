@@ -1,8 +1,8 @@
 using NetCord.Services.ApplicationCommands;
 
-namespace HomeBot.Commands;
+namespace HomeBot.Discord.Modules;
 
-public class ExampleModule : ApplicationCommandModule<ApplicationCommandContext>
+public class HealthModule : ApplicationCommandModule<ApplicationCommandContext>
 {
     [SlashCommand("health", "Check both health")]
     public static string Health() => "healthy";
