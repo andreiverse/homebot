@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 namespace HomeBot.Integrations;
 
 public abstract class BaseIntegration<TSelf> : IIntegration
@@ -12,6 +14,11 @@ public abstract class BaseIntegration<TSelf> : IIntegration
     {
         Logger = logger;
         Metadata = metadata;
+    }
+
+    public virtual async Task<IntegrationHealthStatus> PerformHealthCheck()
+    {
+        return IntegrationHealthStatus.Unknown;
     }
 
     public virtual Task InitializeAsync(CancellationToken cancellationToken)

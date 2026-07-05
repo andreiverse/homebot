@@ -1,5 +1,13 @@
 namespace HomeBot.Integrations.Jellyfin;
 
+public sealed class ItemCounts
+{
+    public int MovieCount { get; set; }
+    public int SeriesCount { get; set; }
+
+    public int EpisodeCount { get; set; }
+}
+
 public sealed class SystemInfo
 {
     public string ServerName { get; set; } = "";
@@ -29,5 +37,11 @@ public sealed class JellyfinHttpClient
     {
         return await _http.GetFromJsonAsync<SystemInfo>("/System/Info")
                ?? throw new InvalidOperationException("Failed to retrieve system info.");
+    }
+
+    public async Task<ItemCounts> GetItemCountsAsync()
+    {
+        return await _http.GetFromJsonAsync<ItemCounts>("/Items/Counts")
+            ?? throw new InvalidOperationException("Failed to retrive item counts");
     }
 }

@@ -6,6 +6,7 @@ supported chat apps:
 - discord*
 
 supported integrations:
+- jellyfin
 - qbittorrent*
 - home assistant*
 - sonarr*

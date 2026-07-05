@@ -18,6 +18,7 @@ builder.Services
 //
 builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(
     builder.Configuration);
+builder.Services.AddSingleton<IntegrationManager>();
 
 //
 // Build
