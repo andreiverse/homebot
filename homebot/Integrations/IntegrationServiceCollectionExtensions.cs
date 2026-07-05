@@ -15,16 +15,15 @@ public static class IntegrationServiceCollectionExtensions
 
         var options = configuration
             .GetRequiredSection(TOptions.Section)
-            .Get<TOptions>()
-            ?? throw new InvalidOperationException(
-                $"Configuration section '{TOptions.Section}' is missing.");
+            .Get<TOptions>(); 
 
-        if (!options.Enabled)
+        if (options == null || !options.Enabled)
             return services;
 
+        // register specific Type
         services.AddSingleton<TIntegration>();
-
-        services.AddSingleton<IIntegration>(sp =>
+        // register Interface
+        services.AddSingleton(sp =>
             (IIntegration)sp.GetRequiredService<TIntegration>());
 
         return services;
