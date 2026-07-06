@@ -24,11 +24,11 @@ public class JellyfinIntegration : BaseIntegration<JellyfinIntegration>
         {
             var sysInfoRaw = await _client.GetSystemInfoAsync();
             return sysInfoRaw.IsShuttingDown == false
-                ? IntegrationHealthStatus.Healthy : IntegrationHealthStatus.NotHealthy;
+                ? IntegrationHealthStatus.Healthy : IntegrationHealthStatus.Unhealthy;
         }
         catch
         {
-            return IntegrationHealthStatus.NotHealthy;
+            return IntegrationHealthStatus.Unhealthy;
         }
     }
 
