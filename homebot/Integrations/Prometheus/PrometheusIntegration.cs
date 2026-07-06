@@ -33,9 +33,8 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
                 ? IntegrationHealthStatus.Healthy
                 : IntegrationHealthStatus.Unhealthy;
         }
-        catch (Exception ex)
+        catch 
         {
-            Logger.LogWarning(ex, "Prometheus health check failed.");
             return IntegrationHealthStatus.Unhealthy;
         }
     }

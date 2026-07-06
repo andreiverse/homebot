@@ -15,13 +15,14 @@ public class IntegrationManager
 
     public async Task<Dictionary<IIntegrationMetadata, IntegrationHealthStatus>> PerformHealthChecks()
     {
-        var healthz = new Dictionary<IIntegrationMetadata, IntegrationHealthStatus>();
-
-        foreach (var integration in integrations)
+        var tasks = integrations.Select(async integration => new
         {
-            healthz.Add(integration.Metadata, await integration.PerformHealthCheck());
-        }
+            integration.Metadata,
+            Status = await integration.PerformHealthCheck()
+        });
 
-        return healthz;
+        var results = await Task.WhenAll(tasks);
+
+        return results.ToDictionary(x => x.Metadata, x => x.Status);
     }
 }
