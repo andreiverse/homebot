@@ -3,16 +3,18 @@
 like homarr but in your favorite chat application
 
 supported chat apps:
-- discord*
+- discord
 
-supported integrations:
+supported functionality:
 - jellyfin
-- qbittorrent*
-- home assistant*
-- sonarr*
-- radarr*
-- prometheus*
-- loki*
+    - see how many movies/series/episodes there are currently added
+    - see basic system info
+- prometheus
+    - see current value of an expression
+    - graph an expression
+    - see number of unhealthytargets
+    - see firing alerts
+    - see basic prometheus system info
 
 \* planned
 
