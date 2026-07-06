@@ -1,0 +1,64 @@
+using Microsoft.Extensions.Options;
+
+namespace HomeBot.Integrations.Prometheus;
+
+public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegration>
+{
+    private readonly PrometheusHttpClient _client;
+
+    public PrometheusIntegration(
+        IOptionsMonitor<PrometheusOptions> options,
+        ILogger<PrometheusIntegration> logger)
+        : base(
+            logger,
+            new IntegrationMetadata(
+                "Prometheus",
+                "Prometheus monitoring integration"))
+    {
+        _client = new PrometheusHttpClient(options.CurrentValue.Endpoint);
+
+        logger.LogInformation("Prometheus integration initialized.");
+    }
+
+    public override async Task<IntegrationHealthStatus> PerformHealthCheck()
+    {
+        try
+        {
+            if (!await _client.IsHealthyAsync())
+                return IntegrationHealthStatus.Unhealthy;
+
+            var runtime = await _client.GetRuntimeInfoAsync();
+
+            return runtime.Status == "success"
+                ? IntegrationHealthStatus.Healthy
+                : IntegrationHealthStatus.Unhealthy;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Prometheus health check failed.");
+            return IntegrationHealthStatus.Unhealthy;
+        }
+    }
+
+    public Task<bool> IsHealthyAsync()
+        => _client.IsHealthyAsync();
+
+    public Task<PrometheusRuntimeInfoResponse> GetRuntimeInfoAsync()
+        => _client.GetRuntimeInfoAsync();
+
+    public Task<PrometheusTargetsResponse> GetTargetsAsync()
+        => _client.GetTargetsAsync();
+
+    public Task<PrometheusAlertsResponse> GetAlertsAsync()
+        => _client.GetAlertsAsync();
+
+    public Task<PrometheusQueryResponse> QueryAsync(string promQl)
+        => _client.QueryAsync(promQl);
+
+    public Task<PrometheusRangeQueryResponse> QueryRangeAsync(
+        string promQl,
+        DateTimeOffset start,
+        DateTimeOffset end,
+        TimeSpan step)
+        => _client.QueryRangeAsync(promQl, start, end, step);
+}

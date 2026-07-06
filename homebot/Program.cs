@@ -1,5 +1,6 @@
 using HomeBot.Integrations;
 using HomeBot.Integrations.Jellyfin;
+using HomeBot.Integrations.Prometheus;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
@@ -17,6 +18,8 @@ builder.Services
 // Integrations
 //
 builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(
+    builder.Configuration);
+builder.Services.AddIntegration<PrometheusIntegration, PrometheusOptions>(
     builder.Configuration);
 builder.Services.AddSingleton<IntegrationManager>();
 
