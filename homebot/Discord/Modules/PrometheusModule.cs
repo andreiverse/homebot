@@ -1,5 +1,6 @@
 using HomeBot.Display;
 using HomeBot.Integrations.Prometheus;
+using Microsoft.Extensions.Options;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using ScottPlot;
@@ -8,9 +9,10 @@ using System.Globalization;
 namespace HomeBot.Discord.Modules;
 
 [SlashCommand("prometheus", "Prometheus monitoring commands")]
-public class PrometheusModule(PrometheusIntegration prometheus)
+public class PrometheusModule(PrometheusIntegration prometheus, IOptions<PrometheusOptions> options)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
+
     [SubSlashCommand("info", "Show Prometheus runtime information")]
     public async Task<InteractionMessageProperties> Info()
     {
@@ -173,12 +175,27 @@ public class PrometheusModule(PrometheusIntegration prometheus)
 
     [SubSlashCommand("graph", "Render a Prometheus graph")]
     public async Task<InteractionMessageProperties> Graph(
-        [SlashCommandParameter(Description = "PromQL query")]
+        [SlashCommandParameter(Description = "PromQL query", AutocompleteProviderType=typeof(PrometheusQueryAutocomplete))]
         string query,
 
         [SlashCommandParameter(Description = "Hours back")]
         int hours = 1)
     {
+        if (query.StartsWith("{PREDEFINED}:"))
+        {
+            query = options.Value.Queries[Int32.Parse(query.Split(":")[1])].PromQL;
+        }
+        else if (options.Value.OnlyAllowDefinedQueries == true)
+        {
+
+            var c = new Card
+            {
+                Heading = "Query is not defined",
+            };
+            return new() { Embeds=[c.ToDiscordEmbed()] };
+
+        }
+
         var end = DateTimeOffset.UtcNow;
         var start = end.AddHours(-hours);
 

@@ -15,8 +15,8 @@ supported functionality:
     - see number of unhealthytargets
     - see firing alerts
     - see basic prometheus system info
-
-\* planned
+    - defined predefined queries for quickly graphing important things with auto completion in discord
+    - restrict users from graphing anything else other than predefined queries by default
 
 ## dev
 
