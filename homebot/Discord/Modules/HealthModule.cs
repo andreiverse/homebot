@@ -1,3 +1,4 @@
+using HomeBot.Display;
 using HomeBot.Integrations;
 using NetCord;
 using NetCord.Rest;
@@ -11,39 +12,43 @@ public class HealthModule(IntegrationManager integrationManager)
     [SlashCommand("health", "Check integration health")]
     public async Task Health()
     {
-        // Immediately acknowledge the interaction
         await Context.Interaction.SendResponseAsync(
-            InteractionCallback.DeferredMessage()
-        );
+            InteractionCallback.DeferredMessage());
 
         var healthz = await integrationManager.PerformHealthChecks();
 
-        var color = healthz.Values.Contains(IntegrationHealthStatus.Unhealthy)
-            ? new Color(0xED4245)
+        var accent = healthz.Values.Contains(IntegrationHealthStatus.Unhealthy)
+            ? "#ED4245"
             : healthz.Values.Contains(IntegrationHealthStatus.Unknown)
-                ? new Color(0xFEE75C)
-                : new Color(0x57F287);
+                ? "#FEE75C"
+                : "#57F287";
 
-        var embed = new EmbedProperties()
-            .WithTitle("Integration Health")
-            .WithColor(color);
-
-        embed.AddFields(
-            healthz.Select(x => new EmbedFieldProperties()
-                .WithName(x.Key.Name)
-                .WithValue(x.Value switch
+        var card = new Card
+        {
+            Heading = "Integration Health",
+            Accent = accent,
+            Content =
+            [
+                new KeyValueBlock
                 {
-                    IntegrationHealthStatus.Healthy => "🟢 Healthy",
-                    IntegrationHealthStatus.Unknown => "🟡 Unknown",
-                    IntegrationHealthStatus.Unhealthy => "🔴 Unhealthy",
-                    _ => "⚪ Unknown"
-                })
-                .WithInline(true))
-        );
+                    Items = healthz.Select(x => new KeyValueItem
+                    {
+                        Key = x.Key.Name,
+                        Value = x.Value switch
+                        {
+                            IntegrationHealthStatus.Healthy => "🟢 Healthy",
+                            IntegrationHealthStatus.Unknown => "🟡 Unknown",
+                            IntegrationHealthStatus.Unhealthy => "🔴 Unhealthy",
+                            _ => "⚪ Unknown"
+                        }
+                    }).ToList()
+                }
+            ]
+        };
 
         await Context.Interaction.ModifyResponseAsync(message =>
         {
-            message.Embeds = [embed];
+            message.Embeds = [card.ToDiscordEmbed()];
         });
     }
 }

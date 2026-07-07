@@ -1,5 +1,5 @@
+using HomeBot.Display;
 using HomeBot.Integrations.Jellyfin;
-using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 
@@ -14,34 +14,46 @@ public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
     {
         var sysInfo = await jellyfinIntegration.GetSystemInfoAsync();
 
-        var embed = new EmbedProperties()
-            .WithTitle("📺 Jellyfin Server")
-            .WithColor(new Color(0x00A4DC))
-            .AddFields(
-                new EmbedFieldProperties()
-                    .WithName("Server")
-                    .WithValue(sysInfo.ServerName)
-                    .WithInline(true),
-
-                new EmbedFieldProperties()
-                    .WithName("Version")
-                    .WithValue(sysInfo.Version)
-                    .WithInline(true),
-
-                new EmbedFieldProperties()
-                    .WithName("Product")
-                    .WithValue(sysInfo.ProductName)
-                    .WithInline(true),
-
-                new EmbedFieldProperties()
-                    .WithName("Update")
-                    .WithValue(sysInfo.HasUpdateAvailable ? "🟡 Available" : "🟢 Up to date")
-                    .WithInline(true)
-            );
+        var card = new Card
+        {
+            Heading = "📺 Jellyfin Server",
+            Accent = "#00A4DC",
+            Content =
+            [
+                new KeyValueBlock
+                {
+                    Items =
+                    [
+                        new()
+                        {
+                            Key = "Server",
+                            Value = sysInfo.ServerName
+                        },
+                        new()
+                        {
+                            Key = "Version",
+                            Value = sysInfo.Version
+                        },
+                        new()
+                        {
+                            Key = "Product",
+                            Value = sysInfo.ProductName
+                        },
+                        new()
+                        {
+                            Key = "Update",
+                            Value = sysInfo.HasUpdateAvailable
+                                ? "🟡 Available"
+                                : "🟢 Up to date"
+                        }
+                    ]
+                }
+            ]
+        };
 
         return new InteractionMessageProperties
         {
-            Embeds = new[] { embed }
+            Embeds = [card.ToDiscordEmbed()]
         };
     }
 
@@ -50,29 +62,39 @@ public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
     {
         var counts = await jellyfinIntegration.GetItemCountsAsync();
 
-        var embed = new EmbedProperties()
-            .WithTitle("🎬 Jellyfin Library")
-            .WithColor(new Color(0x00A4DC))
-            .AddFields(
-                new EmbedFieldProperties()
-                    .WithName("🎥 Movies")
-                    .WithValue(counts.MovieCount.ToString())
-                    .WithInline(true),
-
-                new EmbedFieldProperties()
-                    .WithName("📺 Series")
-                    .WithValue(counts.SeriesCount.ToString())
-                    .WithInline(true),
-
-                new EmbedFieldProperties()
-                    .WithName("🎞️ Episodes")
-                    .WithValue(counts.EpisodeCount.ToString())
-                    .WithInline(true)
-            );
+        var card = new Card
+        {
+            Heading = "🎬 Jellyfin Library",
+            Accent = "#00A4DC",
+            Content =
+            [
+                new KeyValueBlock
+                {
+                    Items =
+                    [
+                        new()
+                        {
+                            Key = "🎥 Movies",
+                            Value = counts.MovieCount.ToString()
+                        },
+                        new()
+                        {
+                            Key = "📺 Series",
+                            Value = counts.SeriesCount.ToString()
+                        },
+                        new()
+                        {
+                            Key = "🎞️ Episodes",
+                            Value = counts.EpisodeCount.ToString()
+                        }
+                    ]
+                }
+            ]
+        };
 
         return new InteractionMessageProperties
         {
-            Embeds = new[] { embed }
+            Embeds = [card.ToDiscordEmbed()]
         };
     }
 }
