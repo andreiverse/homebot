@@ -1,3 +1,4 @@
+using HomeBot.Discord;
 using HomeBot.Integrations;
 using HomeBot.Integrations.Jellyfin;
 using HomeBot.Integrations.Prometheus;
@@ -25,6 +26,11 @@ builder.Services.AddSingleton<IntegrationManager>();
 
 builder.Services.AddSingleton<IntegrationMetricManager>();
 builder.Services.AddHostedService<IntegrationMetricRefreshService>();
+
+
+builder.Services.AddHostedService<DiscordMetricChannelService>();
+builder.Services.Configure<DiscordOptions>(
+    builder.Configuration.GetRequiredSection("Discord"));
 
 //
 // Build

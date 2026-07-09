@@ -1,6 +1,6 @@
 namespace HomeBot.Integrations;
 
-public sealed record MetricSnapshot(
+public sealed record IntegrationMetricSnapshot(
     IIntegrationMetric Metric,
     object? Value,
     DateTimeOffset Timestamp);

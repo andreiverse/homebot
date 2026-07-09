@@ -5,7 +5,7 @@ namespace HomeBot.Integrations;
 public sealed class IntegrationMetricManager
 {
     private readonly Dictionary<string, IIntegrationMetric> _metrics = [];
-    private readonly ConcurrentDictionary<string, MetricSnapshot> _values = [];
+    private readonly ConcurrentDictionary<string, IntegrationMetricSnapshot> _values = [];
 
     public IntegrationMetricManager(IEnumerable<IMetricProvider> providers)
     {
@@ -28,7 +28,7 @@ public sealed class IntegrationMetricManager
         {
             var value = await metric.GetValueAsync(cancellationToken);
 
-            _values[metric.Id] = new MetricSnapshot(
+            _values[metric.Id] = new IntegrationMetricSnapshot(
                 metric,
                 value,
                 DateTimeOffset.UtcNow);
@@ -37,10 +37,10 @@ public sealed class IntegrationMetricManager
         await Task.WhenAll(tasks);
     }
 
-    public IReadOnlyCollection<MetricSnapshot> GetSnapshot()
+    public IReadOnlyCollection<IntegrationMetricSnapshot> GetSnapshot()
         => _values.Values.ToArray();
 
-    public MetricSnapshot? GetSnapshot(string id)
+    public IntegrationMetricSnapshot? GetSnapshot(string id)
     {
         _values.TryGetValue(id, out var snapshot);
         return snapshot;
