@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-
 namespace HomeBot.Integrations;
 
 public static class IntegrationServiceCollectionExtensions
@@ -25,6 +23,12 @@ public static class IntegrationServiceCollectionExtensions
         // register Interface
         services.AddSingleton(sp =>
             (IIntegration)sp.GetRequiredService<TIntegration>());
+        // register it as a metric provider
+        if (typeof(IMetricProvider).IsAssignableFrom(typeof(TIntegration))) {
+            services.AddSingleton(sp =>
+                (IMetricProvider)sp.GetRequiredService<TIntegration>()
+            );
+        }
 
         return services;
     }

@@ -2,8 +2,8 @@ namespace HomeBot.Integrations;
 
 public interface IIntegrationMetadata
 {
-    String Name { get; }
-    String Description { get; }
+    string Name { get; }
+    string Description { get; }
 }
 
 public record IntegrationMetadata(string Name, string Description) : IIntegrationMetadata;

@@ -1,10 +1,8 @@
-using NetCord;
-
 namespace HomeBot.Integrations;
 
 public class IntegrationManager
 {
-    IEnumerable<IIntegration> integrations;
+    readonly IEnumerable<IIntegration> integrations;
 
     public IntegrationManager(
         IEnumerable<IIntegration> integrations

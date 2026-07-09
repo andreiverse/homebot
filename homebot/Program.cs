@@ -23,6 +23,9 @@ builder.Services.AddIntegration<PrometheusIntegration, PrometheusOptions>(
     builder.Configuration);
 builder.Services.AddSingleton<IntegrationManager>();
 
+builder.Services.AddSingleton<IntegrationMetricManager>();
+builder.Services.AddHostedService<IntegrationMetricRefreshService>();
+
 //
 // Build
 //

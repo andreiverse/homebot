@@ -2,9 +2,11 @@ using Microsoft.Extensions.Options;
 
 namespace HomeBot.Integrations.Prometheus;
 
-public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegration>
+public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegration>, IMetricProvider
 {
     private readonly PrometheusHttpClient _client;
+    private readonly IOptionsMonitor<PrometheusOptions> _options;
+
 
     public PrometheusIntegration(
         IOptionsMonitor<PrometheusOptions> options,
@@ -16,9 +18,20 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
                 "Prometheus monitoring integration"))
     {
         _client = new PrometheusHttpClient(options.CurrentValue.Endpoint);
+        _options = options;
 
         logger.LogInformation("Prometheus integration initialized.");
     }
+
+    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics =>
+        _options.CurrentValue.Queries.Select(query =>
+            new IntegrationMetric(
+                query.Name,
+                async _ =>
+                {
+                    var result = await QueryAsync(query.PromQL);
+                    return result.Data.Result.FirstOrDefault()?.Value[1];
+                }));
 
     public override async Task<IntegrationHealthStatus> PerformHealthCheck()
     {
@@ -33,7 +46,7 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
                 ? IntegrationHealthStatus.Healthy
                 : IntegrationHealthStatus.Unhealthy;
         }
-        catch 
+        catch
         {
             return IntegrationHealthStatus.Unhealthy;
         }
