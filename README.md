@@ -4,6 +4,8 @@ like homarr but in your favorite chat application
 
 supported chat apps:
 - discord
+    - commands for every functionality below
+    - update your voice channels with custom metrics from prometheus or other integrations that expose them
 
 supported functionality:
 - jellyfin
