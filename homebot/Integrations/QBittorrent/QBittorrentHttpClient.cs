@@ -1,5 +1,3 @@
-using System.Net;
-
 namespace HomeBot.Integrations.QBittorrent;
 
 public sealed class QBittorrentHttpClient
@@ -7,32 +5,12 @@ public sealed class QBittorrentHttpClient
     private readonly HttpClient _http;
     private bool _authenticated;
 
-    public QBittorrentHttpClient(
-        string endpoint,
-        string username,
-        string password)
+    public QBittorrentHttpClient(HttpClient http)
     {
-        var cookies = new CookieContainer();
-
-        var handler = new HttpClientHandler
-        {
-            CookieContainer = cookies,
-            UseCookies = true
-        };
-
-        _http = new HttpClient(handler)
-        {
-            BaseAddress = new Uri(endpoint.TrimEnd('/') + "/")
-        };
-
-        Username = username;
-        Password = password;
+        _http = http;
     }
 
-    private string Username { get; }
-    private string Password { get; }
-
-    private async Task AuthenticateAsync()
+    private Task AuthenticateAsync()
     {
         _authenticated = true;
         // if (_authenticated)
@@ -53,35 +31,35 @@ public sealed class QBittorrentHttpClient
         //     throw new InvalidOperationException("Authentication failed.");
 
         // _authenticated = true;
+        return Task.CompletedTask;
     }
 
-    public async Task<AppVersion> GetVersionAsync()
+    public async Task<AppVersion> GetVersionAsync(CancellationToken cancellationToken = default)
     {
         await AuthenticateAsync();
 
-        var version = await _http.GetStringAsync("api/v2/app/version");
+        var version = await _http.GetStringAsync("api/v2/app/version", cancellationToken);
 
         return new AppVersion(version.Trim());
     }
 
-    public async Task<BuildInfo> GetBuildInfoAsync()
+    public async Task<BuildInfo> GetBuildInfoAsync(CancellationToken cancellationToken = default)
     {
         await AuthenticateAsync();
 
-        return await _http.GetFromJsonAsync<BuildInfo>("api/v2/app/buildInfo")
-            ?? throw new InvalidOperationException("Failed to retrieve build info.");
+        return await _http.GetFromJsonRequiredAsync<BuildInfo>("api/v2/app/buildInfo", cancellationToken);
     }
 
-    public async Task<Preferences> GetPreferencesAsync()
+    public async Task<Preferences> GetPreferencesAsync(CancellationToken cancellationToken = default)
     {
         await AuthenticateAsync();
 
-        return await _http.GetFromJsonAsync<Preferences>("api/v2/app/preferences")
-            ?? throw new InvalidOperationException("Failed to retrieve preferences.");
+        return await _http.GetFromJsonRequiredAsync<Preferences>("api/v2/app/preferences", cancellationToken);
     }
 
     public async Task<IReadOnlyList<TorrentInfo>> GetTorrentsAsync(
-        string? filter = null)
+        string? filter = null,
+        CancellationToken cancellationToken = default)
     {
         await AuthenticateAsync();
 
@@ -90,20 +68,19 @@ public sealed class QBittorrentHttpClient
         if (!string.IsNullOrWhiteSpace(filter))
             url += $"?filter={Uri.EscapeDataString(filter)}";
 
-        return await _http.GetFromJsonAsync<List<TorrentInfo>>(url)
+        return await _http.GetFromJsonAsync<List<TorrentInfo>>(url, cancellationToken)
             ?? [];
     }
 
-    public async Task<TransferInfo> GetTransferInfoAsync()
+    public async Task<TransferInfo> GetTransferInfoAsync(CancellationToken cancellationToken = default)
     {
         await AuthenticateAsync();
 
-        return await _http.GetFromJsonAsync<TransferInfo>("api/v2/transfer/info")
-            ?? throw new InvalidOperationException();
+        return await _http.GetFromJsonRequiredAsync<TransferInfo>("api/v2/transfer/info", cancellationToken);
     }
 
 
-    public async Task DeleteSearchAsync(int searchId)
+    public async Task DeleteSearchAsync(int searchId, CancellationToken cancellationToken = default)
     {
         await AuthenticateAsync();
 
@@ -112,7 +89,7 @@ public sealed class QBittorrentHttpClient
             ["id"] = searchId.ToString()
         });
 
-        var response = await _http.PostAsync("api/v2/search/delete", content);
+        var response = await _http.PostAsync("api/v2/search/delete", content, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 }

@@ -17,7 +17,7 @@ public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
         var card = new Card
         {
             Heading = "📺 Jellyfin Server",
-            Accent = "#00A4DC",
+            Accent = BrandColors.Jellyfin,
             Content =
             [
                 new KeyValueBlock
@@ -51,10 +51,7 @@ public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
             ]
         };
 
-        return new InteractionMessageProperties
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("itemcounts", "Get Jellyfin item counts")]
@@ -65,7 +62,7 @@ public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
         var card = new Card
         {
             Heading = "🎬 Jellyfin Library",
-            Accent = "#00A4DC",
+            Accent = BrandColors.Jellyfin,
             Content =
             [
                 new KeyValueBlock
@@ -92,9 +89,6 @@ public class JellyfinModule(JellyfinIntegration jellyfinIntegration)
             ]
         };
 
-        return new InteractionMessageProperties
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 }

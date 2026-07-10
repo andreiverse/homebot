@@ -1,17 +1,12 @@
-using System.Net.Http.Json;
-
 namespace HomeBot.Integrations.Prometheus;
 
 public sealed class PrometheusHttpClient
 {
     private readonly HttpClient _http;
 
-    public PrometheusHttpClient(string endpoint)
+    public PrometheusHttpClient(HttpClient http)
     {
-        _http = new HttpClient
-        {
-            BaseAddress = new Uri(endpoint.TrimEnd('/'))
-        };
+        _http = http;
     }
 
     public async Task<bool> IsHealthyAsync(CancellationToken ct = default)
@@ -20,44 +15,31 @@ public sealed class PrometheusHttpClient
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<PrometheusRuntimeInfoResponse> GetRuntimeInfoAsync(
+    public Task<PrometheusRuntimeInfoResponse> GetRuntimeInfoAsync(
         CancellationToken ct = default)
-    {
-        return await _http.GetFromJsonAsync<PrometheusRuntimeInfoResponse>(
-                   "/api/v1/status/runtimeinfo",
-                   ct)
-               ?? throw new InvalidOperationException("No response.");
-    }
+        => _http.GetFromJsonRequiredAsync<PrometheusRuntimeInfoResponse>(
+            "/api/v1/status/runtimeinfo", ct);
 
-    public async Task<PrometheusTargetsResponse> GetTargetsAsync(
+    public Task<PrometheusTargetsResponse> GetTargetsAsync(
         CancellationToken ct = default)
-    {
-        return await _http.GetFromJsonAsync<PrometheusTargetsResponse>(
-                   "/api/v1/targets",
-                   ct)
-               ?? throw new InvalidOperationException("No response.");
-    }
+        => _http.GetFromJsonRequiredAsync<PrometheusTargetsResponse>(
+            "/api/v1/targets", ct);
 
-    public async Task<PrometheusAlertsResponse> GetAlertsAsync(
+    public Task<PrometheusAlertsResponse> GetAlertsAsync(
         CancellationToken ct = default)
-    {
-        return await _http.GetFromJsonAsync<PrometheusAlertsResponse>(
-                   "/api/v1/alerts",
-                   ct)
-               ?? throw new InvalidOperationException("No response.");
-    }
+        => _http.GetFromJsonRequiredAsync<PrometheusAlertsResponse>(
+            "/api/v1/alerts", ct);
 
-    public async Task<PrometheusQueryResponse> QueryAsync(
+    public Task<PrometheusQueryResponse> QueryAsync(
         string promQl,
         CancellationToken ct = default)
     {
         var url = $"/api/v1/query?query={Uri.EscapeDataString(promQl)}";
 
-        return await _http.GetFromJsonAsync<PrometheusQueryResponse>(url, ct)
-               ?? throw new InvalidOperationException("No response.");
+        return _http.GetFromJsonRequiredAsync<PrometheusQueryResponse>(url, ct);
     }
 
-    public async Task<PrometheusRangeQueryResponse> QueryRangeAsync(
+    public Task<PrometheusRangeQueryResponse> QueryRangeAsync(
         string promQl,
         DateTimeOffset start,
         DateTimeOffset end,
@@ -71,7 +53,6 @@ public sealed class PrometheusHttpClient
             $"&end={end.ToUnixTimeSeconds()}" +
             $"&step={(int)step.TotalSeconds}";
 
-        return await _http.GetFromJsonAsync<PrometheusRangeQueryResponse>(url, ct)
-               ?? throw new InvalidOperationException("No response.");
+        return _http.GetFromJsonRequiredAsync<PrometheusRangeQueryResponse>(url, ct);
     }
 }

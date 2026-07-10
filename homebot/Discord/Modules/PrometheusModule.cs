@@ -21,7 +21,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
         var card = new Card
         {
             Heading = "📈 Prometheus",
-            Accent = "#E6522C",
+            Accent = BrandColors.Prometheus,
             Content =
             [
                 new KeyValueBlock
@@ -38,10 +38,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
             ]
         };
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("targets", "Show scrape target status")]
@@ -55,7 +52,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
         var card = new Card
         {
             Heading = "🎯 Prometheus Targets",
-            Accent = "#E6522C",
+            Accent = BrandColors.Prometheus,
             Content =
             [
                 new KeyValueBlock
@@ -70,10 +67,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
             ]
         };
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("alerts", "Show active alerts")]
@@ -86,7 +80,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
         var card = new Card
         {
             Heading = "🚨 Prometheus Alerts",
-            Accent = active == 0 ? "#43B581" : "#F04747",
+            Accent = active == 0 ? BrandColors.AlertsClear : BrandColors.AlertsFiring,
             Summary = active == 0
                 ? "No active alerts."
                 : $"{active} alert(s) currently firing."
@@ -107,10 +101,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
             });
         }
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("query", "Execute a PromQL query")]
@@ -123,7 +114,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
         var card = new Card
         {
             Heading = "🔎 PromQL Query",
-            Accent = "#E6522C",
+            Accent = BrandColors.Prometheus,
             Content =
             [
                 new CodeBlock
@@ -167,10 +158,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
             });
         }
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("graph", "Render a Prometheus graph")]
@@ -192,7 +180,7 @@ public class PrometheusModule(PrometheusIntegration prometheus, IOptions<Prometh
             {
                 Heading = "Query is not defined",
             };
-            return new() { Embeds=[c.ToDiscordEmbed()] };
+            return c.ToInteractionMessage();
 
         }
 

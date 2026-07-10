@@ -9,6 +9,7 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
     private readonly List<IIntegrationMetric> _metrics;
 
     public PrometheusIntegration(
+        PrometheusHttpClient client,
         IOptionsMonitor<PrometheusOptions> options,
         ILogger<PrometheusIntegration> logger)
         : base(
@@ -17,7 +18,7 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
                 "Prometheus",
                 "Prometheus monitoring integration"))
     {
-        _client = new PrometheusHttpClient(options.CurrentValue.Endpoint);
+        _client = client;
         _options = options;
 
         logger.LogInformation("Prometheus integration initialized.");
@@ -39,7 +40,7 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
             var query = _options.CurrentValue.Queries
                 .First(q => q.Name == metric.Name);
 
-            var response = await QueryAsync(query.PromQL);
+            var response = await QueryAsync(query.PromQL, cancellationToken);
 
             object? value = response.Data.Result
                 .FirstOrDefault()?
@@ -54,44 +55,37 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
         await Task.WhenAll(tasks);
     }
 
-    public override async Task<IntegrationHealthStatus> PerformHealthCheck()
-    {
-        try
+    public override Task<IntegrationHealthStatus> PerformHealthCheck()
+        => ProbeHealthAsync(async () =>
         {
             if (!await _client.IsHealthyAsync())
-                return IntegrationHealthStatus.Unhealthy;
+                return false;
 
             var runtime = await _client.GetRuntimeInfoAsync();
 
-            return runtime.Status == "success"
-                ? IntegrationHealthStatus.Healthy
-                : IntegrationHealthStatus.Unhealthy;
-        }
-        catch
-        {
-            return IntegrationHealthStatus.Unhealthy;
-        }
-    }
+            return runtime.Status == "success";
+        });
 
-    public Task<bool> IsHealthyAsync()
-        => _client.IsHealthyAsync();
+    public Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
+        => _client.IsHealthyAsync(cancellationToken);
 
-    public Task<PrometheusRuntimeInfoResponse> GetRuntimeInfoAsync()
-        => _client.GetRuntimeInfoAsync();
+    public Task<PrometheusRuntimeInfoResponse> GetRuntimeInfoAsync(CancellationToken cancellationToken = default)
+        => _client.GetRuntimeInfoAsync(cancellationToken);
 
-    public Task<PrometheusTargetsResponse> GetTargetsAsync()
-        => _client.GetTargetsAsync();
+    public Task<PrometheusTargetsResponse> GetTargetsAsync(CancellationToken cancellationToken = default)
+        => _client.GetTargetsAsync(cancellationToken);
 
-    public Task<PrometheusAlertsResponse> GetAlertsAsync()
-        => _client.GetAlertsAsync();
+    public Task<PrometheusAlertsResponse> GetAlertsAsync(CancellationToken cancellationToken = default)
+        => _client.GetAlertsAsync(cancellationToken);
 
-    public Task<PrometheusQueryResponse> QueryAsync(string promQl)
-        => _client.QueryAsync(promQl);
+    public Task<PrometheusQueryResponse> QueryAsync(string promQl, CancellationToken cancellationToken = default)
+        => _client.QueryAsync(promQl, cancellationToken);
 
     public Task<PrometheusRangeQueryResponse> QueryRangeAsync(
         string promQl,
         DateTimeOffset start,
         DateTimeOffset end,
-        TimeSpan step)
-        => _client.QueryRangeAsync(promQl, start, end, step);
+        TimeSpan step,
+        CancellationToken cancellationToken = default)
+        => _client.QueryRangeAsync(promQl, start, end, step, cancellationToken);
 }

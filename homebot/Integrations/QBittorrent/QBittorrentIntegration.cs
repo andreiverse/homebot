@@ -1,32 +1,22 @@
-using Microsoft.Extensions.Options;
-
 namespace HomeBot.Integrations.QBittorrent;
 
 public sealed class QBittorrentIntegration
     : BaseIntegration<QBittorrentIntegration>, IMetricProvider
 {
-
     private readonly QBittorrentHttpClient _client;
 
+    private readonly MetricSet<TransferInfo> _metrics = new MetricSet<TransferInfo>()
+        .Add("download_speed", "Current download speed (bytes/s)", d => d.DlInfoSpeed)
+        .Add("upload_speed", "Current upload speed (bytes/s)", d => d.UpInfoSpeed)
+        .Add("downloaded", "Total downloaded bytes", d => d.DlInfoData)
+        .Add("uploaded", "Total uploaded bytes", d => d.UpInfoData)
+        .Add("dht_nodes", "Connected DHT nodes", d => d.DhtNodes);
+
     private TransferInfo? _transferInfo;
-
-    private readonly IIntegrationMetric _downloadSpeedMetric =
-        new IntegrationMetric("download_speed", "Current download speed (bytes/s)");
-
-    private readonly IIntegrationMetric _uploadSpeedMetric =
-        new IntegrationMetric("upload_speed", "Current upload speed (bytes/s)");
-
-    private readonly IIntegrationMetric _downloadedMetric =
-        new IntegrationMetric("downloaded", "Total downloaded bytes");
-
-    private readonly IIntegrationMetric _uploadedMetric =
-        new IntegrationMetric("uploaded", "Total uploaded bytes");
-
-    private readonly IIntegrationMetric _dhtNodesMetric =
-        new IntegrationMetric("dht_nodes", "Connected DHT nodes");
+    private DateTimeOffset _lastRefreshed;
 
     public QBittorrentIntegration(
-        IOptionsMonitor<QBittorrentOptions> options,
+        QBittorrentHttpClient client,
         ILogger<QBittorrentIntegration> logger)
         : base(
             logger,
@@ -34,67 +24,47 @@ public sealed class QBittorrentIntegration
                 "qBittorrent",
                 "qBittorrent integration"))
     {
-        _client = new QBittorrentHttpClient(
-            options.CurrentValue.Endpoint,
-            "",
-            "");
+        _client = client;
 
         logger.LogInformation("qBittorrent integration initialized.");
     }
 
-    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics =>
-    [
-        _downloadSpeedMetric,
-        _uploadSpeedMetric,
-        _downloadedMetric,
-        _uploadedMetric,
-        _dhtNodesMetric
-    ];
+    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics => _metrics.Metrics;
 
     IEnumerable<IntegrationMetricSnapshot> IMetricProvider.Snapshots =>
-    [
-        new(_downloadSpeedMetric, _transferInfo?.DlInfoSpeed, DateTimeOffset.UtcNow),
-        new(_uploadSpeedMetric, _transferInfo?.UpInfoSpeed, DateTimeOffset.UtcNow),
-        new(_downloadedMetric, _transferInfo?.DlInfoData, DateTimeOffset.UtcNow),
-        new(_uploadedMetric, _transferInfo?.UpInfoData, DateTimeOffset.UtcNow),
-        new(_dhtNodesMetric, _transferInfo?.DhtNodes, DateTimeOffset.UtcNow)
-    ];
+        _metrics.Snapshot(_transferInfo, _lastRefreshed);
 
     public async Task RefreshAsync(
         CancellationToken cancellationToken = default)
     {
-        _transferInfo = await _client.GetTransferInfoAsync();
+        _transferInfo = await _client.GetTransferInfoAsync(cancellationToken);
+        _lastRefreshed = DateTimeOffset.UtcNow;
     }
 
-
-    public override async Task<IntegrationHealthStatus> PerformHealthCheck()
-    {
-        try
+    public override Task<IntegrationHealthStatus> PerformHealthCheck()
+        => ProbeHealthAsync(async () =>
         {
             await _client.GetVersionAsync();
-            return IntegrationHealthStatus.Healthy;
-        }
-        catch
-        {
-            return IntegrationHealthStatus.Unhealthy;
-        }
-    }
+            return true;
+        });
 
-    public Task<AppVersion> GetVersionAsync()
-        => _client.GetVersionAsync();
+    public Task<AppVersion> GetVersionAsync(CancellationToken cancellationToken = default)
+        => _client.GetVersionAsync(cancellationToken);
 
-    public Task<BuildInfo> GetBuildInfoAsync()
-        => _client.GetBuildInfoAsync();
+    public Task<BuildInfo> GetBuildInfoAsync(CancellationToken cancellationToken = default)
+        => _client.GetBuildInfoAsync(cancellationToken);
 
-    public Task<Preferences> GetPreferencesAsync()
-        => _client.GetPreferencesAsync();
-    
-    public Task DeleteSearchAsync(int searchId)
-        => _client.DeleteSearchAsync(searchId);
+    public Task<Preferences> GetPreferencesAsync(CancellationToken cancellationToken = default)
+        => _client.GetPreferencesAsync(cancellationToken);
 
-    public Task<IReadOnlyList<TorrentInfo>> GetTorrentsAsync(string? filter = null)
-        => _client.GetTorrentsAsync(filter);
+    public Task DeleteSearchAsync(int searchId, CancellationToken cancellationToken = default)
+        => _client.DeleteSearchAsync(searchId, cancellationToken);
 
-    public Task<TransferInfo> GetTransferInfoAsync()
-        => _client.GetTransferInfoAsync();
+    public Task<IReadOnlyList<TorrentInfo>> GetTorrentsAsync(
+        string? filter = null,
+        CancellationToken cancellationToken = default)
+        => _client.GetTorrentsAsync(filter, cancellationToken);
+
+    public Task<TransferInfo> GetTransferInfoAsync(CancellationToken cancellationToken = default)
+        => _client.GetTransferInfoAsync(cancellationToken);
 }

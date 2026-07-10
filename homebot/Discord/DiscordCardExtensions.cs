@@ -16,11 +16,8 @@ public static class DiscordCardExtensions
         if (!string.IsNullOrWhiteSpace(card.Summary))
             embed.WithDescription(card.Summary);
 
-        if (Uri.TryCreate(card.Accent, UriKind.Absolute, out _))
-        {
-            // Accent isn't a URL, ignore.
-        }
-        else if (!string.IsNullOrWhiteSpace(card.Accent))
+        if (!string.IsNullOrWhiteSpace(card.Accent) &&
+            !Uri.TryCreate(card.Accent, UriKind.Absolute, out _))
         {
             var hex = card.Accent.Trim().TrimStart('#');
 
@@ -122,4 +119,7 @@ public static class DiscordCardExtensions
 
         return embed;
     }
+
+    public static InteractionMessageProperties ToInteractionMessage(this Card card)
+        => new() { Embeds = [card.ToDiscordEmbed()] };
 }
