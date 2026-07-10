@@ -80,29 +80,6 @@ public sealed class QBittorrentHttpClient
             ?? throw new InvalidOperationException("Failed to retrieve preferences.");
     }
 
-    public async Task<SearchStartResponse> StartSearchAsync(
-        string pattern,
-        IEnumerable<string>? plugins = null,
-        string category = "all")
-    {
-        await AuthenticateAsync();
-
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["pattern"] = pattern,
-            ["category"] = category,
-            ["plugins"] = plugins is null
-                ? "enabled"
-                : string.Join("|", plugins)
-        });
-
-        var response = await _http.PostAsync("api/v2/search/start", content);
-        response.EnsureSuccessStatusCode();
-
-        return await response.Content.ReadFromJsonAsync<SearchStartResponse>()
-            ?? throw new InvalidOperationException("Failed to start search.");
-    }
-
     public async Task<IReadOnlyList<TorrentInfo>> GetTorrentsAsync(
         string? filter = null)
     {
@@ -125,30 +102,6 @@ public sealed class QBittorrentHttpClient
             ?? throw new InvalidOperationException();
     }
 
-    public async Task<IReadOnlyList<SearchResult>> GetSearchResultsAsync(
-        int searchId,
-        int limit = 100,
-        int offset = 0)
-    {
-        await AuthenticateAsync();
-
-        var response = await _http.GetFromJsonAsync<SearchResultsResponse>(
-        $"api/v2/search/results?id={searchId}&limit={limit}&offset={offset}")
-        ?? throw new InvalidOperationException("Failed to retrieve search results.");
-
-        return response.Results;
-    }
-
-    public async Task<SearchStatus> GetSearchStatusAsync(int searchId)
-    {
-        await AuthenticateAsync();
-
-        var statuses = await _http.GetFromJsonAsync<List<SearchStatus>>(
-                           $"api/v2/search/status?id={searchId}")
-                       ?? throw new InvalidOperationException("Failed to retrieve search status.");
-
-        return statuses.Single();
-    }
 
     public async Task DeleteSearchAsync(int searchId)
     {

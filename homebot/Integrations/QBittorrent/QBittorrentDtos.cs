@@ -43,20 +43,3 @@ public sealed record TransferInfo(
     string ConnectionStatus,
     int DhtNodes);
 
-public sealed record SearchResult(
-    string FileName,
-    string FileSize,
-    int Seeds,
-    int Leechers,
-    string FileUrl,
-    string DescriptionUrl,
-    string SiteUrl);
-
-public sealed class SearchResultsResponse
-{
-    public required List<SearchResult> Results { get; init; }
-
-    public required string Status { get; init; }
-
-    public required int Total { get; init; }
-}

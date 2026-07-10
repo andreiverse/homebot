@@ -88,65 +88,7 @@ public sealed class QBittorrentIntegration
 
     public Task<Preferences> GetPreferencesAsync()
         => _client.GetPreferencesAsync();
-
-    public async Task<IReadOnlyList<SearchResult>> SearchAsync(
-        string pattern,
-        IEnumerable<string>? plugins = null,
-        string category = "all",
-        int limit = 25,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
-    {
-        timeout ??= TimeSpan.FromSeconds(10);
-
-        var search = await _client.StartSearchAsync(pattern, plugins, category);
-
-        try
-        {
-            var start = DateTime.UtcNow;
-
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var status = await _client.GetSearchStatusAsync(search.Id);
-
-                if (status.Status.Equals("Stopped", StringComparison.OrdinalIgnoreCase))
-                    break;
-
-                if (DateTime.UtcNow - start >= timeout.Value)
-                    break;
-
-                await Task.Delay(1000, cancellationToken);
-            }
-
-            return await _client.GetSearchResultsAsync(
-                search.Id,
-                limit,
-                0);
-        }
-        finally
-        {
-            try
-            {
-                await _client.DeleteSearchAsync(search.Id);
-            }
-            catch
-            {
-                // Ignore cleanup failures.
-            }
-        }
-    }
-
-    public Task<IReadOnlyList<SearchResult>> GetSearchResultsAsync(
-        int searchId,
-        int limit = 100,
-        int offset = 0)
-        => _client.GetSearchResultsAsync(searchId, limit, offset);
-
-    public Task<SearchStatus> GetSearchStatusAsync(int searchId)
-        => _client.GetSearchStatusAsync(searchId);
-
+    
     public Task DeleteSearchAsync(int searchId)
         => _client.DeleteSearchAsync(searchId);
 
