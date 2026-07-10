@@ -19,6 +19,9 @@ supported functionality:
     - see basic prometheus system info
     - defined predefined queries for quickly graphing important things with auto completion in discord
     - restrict users from graphing anything else other than predefined queries by default
+- qbittorrent
+    - see transfer info
+    - see torrents downloaded/seeding/completed/error/etc
 
 ## dev
 
