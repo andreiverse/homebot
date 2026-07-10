@@ -2,6 +2,7 @@ using HomeBot.Discord;
 using HomeBot.Integrations;
 using HomeBot.Integrations.Jellyfin;
 using HomeBot.Integrations.Prometheus;
+using HomeBot.Integrations.QBittorrent;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
@@ -21,6 +22,8 @@ builder.Services
 builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(
     builder.Configuration);
 builder.Services.AddIntegration<PrometheusIntegration, PrometheusOptions>(
+    builder.Configuration);
+builder.Services.AddIntegration<QBittorrentIntegration, QBittorrentOptions>(
     builder.Configuration);
 builder.Services.AddSingleton<IntegrationManager>();
 
