@@ -1,21 +1,17 @@
-using System.Collections.Concurrent;
-
 namespace HomeBot.Integrations;
 
 public sealed class IntegrationMetricManager
 {
-    private readonly Dictionary<string, IIntegrationMetric> _metrics = [];
-    private readonly ConcurrentDictionary<string, IntegrationMetricSnapshot> _values = [];
+    private readonly IReadOnlyList<IMetricProvider> _providers;
+    private readonly Dictionary<string, IIntegrationMetric> _metrics;
 
     public IntegrationMetricManager(IEnumerable<IMetricProvider> providers)
     {
-        foreach (var provider in providers)
-        {
-            foreach (var metric in provider.Metrics)
-            {
-                _metrics.Add(metric.Id, metric);
-            }
-        }
+        _providers = providers.ToList();
+
+        _metrics = _providers
+            .SelectMany(p => p.Metrics)
+            .ToDictionary(m => m.Id);
     }
 
     public IReadOnlyCollection<IIntegrationMetric> Metrics =>
@@ -24,35 +20,27 @@ public sealed class IntegrationMetricManager
     public async Task RefreshAsync(
         CancellationToken cancellationToken = default)
     {
-        var tasks = _metrics.Values.Select(async metric =>
-        {
-            var value = await metric.GetValueAsync(cancellationToken);
-
-            _values[metric.Id] = new IntegrationMetricSnapshot(
-                metric,
-                value,
-                DateTimeOffset.UtcNow);
-        });
-
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(
+            _providers.Select(p => p.RefreshAsync(cancellationToken)));
     }
 
     public IReadOnlyCollection<IntegrationMetricSnapshot> GetSnapshot()
-        => _values.Values.ToArray();
+    {
+        return _providers
+            .SelectMany(p => p.Snapshots)
+            .ToArray();
+    }
 
     public IntegrationMetricSnapshot? GetSnapshot(string id)
     {
-        _values.TryGetValue(id, out var snapshot);
-        return snapshot;
+        return _providers
+            .SelectMany(p => p.Snapshots)
+            .FirstOrDefault(s => s.Metric.Id == id);
     }
 
-    public async Task<object?> GetValueAsync(
-        string id,
-        CancellationToken cancellationToken = default)
+    public IIntegrationMetric? GetMetric(string id)
     {
-        if (!_metrics.TryGetValue(id, out var metric))
-            throw new KeyNotFoundException(id);
-
-        return await metric.GetValueAsync(cancellationToken);
+        _metrics.TryGetValue(id, out var metric);
+        return metric;
     }
 }

@@ -6,7 +6,7 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
 {
     private readonly PrometheusHttpClient _client;
     private readonly IOptionsMonitor<PrometheusOptions> _options;
-
+    private readonly List<IIntegrationMetric> _metrics;
 
     public PrometheusIntegration(
         IOptionsMonitor<PrometheusOptions> options,
@@ -21,17 +21,38 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
         _options = options;
 
         logger.LogInformation("Prometheus integration initialized.");
+
+        _metrics = _options.CurrentValue.Queries
+            .Select(q => new IntegrationMetric(q.Name))
+            .Cast<IIntegrationMetric>()
+            .ToList();
     }
 
-    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics =>
-        _options.CurrentValue.Queries.Select(query =>
-            new IntegrationMetric(
-                query.Name,
-                async _ =>
-                {
-                    var result = await QueryAsync(query.PromQL);
-                    return result.Data.Result.FirstOrDefault()?.Value[1];
-                }));
+    private readonly Dictionary<string, IntegrationMetricSnapshot> _snapshots = [];
+    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics => _metrics;
+    IEnumerable<IntegrationMetricSnapshot> IMetricProvider.Snapshots => _snapshots.Values;
+
+    public async Task RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        var tasks = _metrics.Select(async metric =>
+        {
+            var query = _options.CurrentValue.Queries
+                .First(q => q.Name == metric.Name);
+
+            var response = await QueryAsync(query.PromQL);
+
+            object? value = response.Data.Result
+                .FirstOrDefault()?
+                .Value[1];
+
+            _snapshots[metric.Id] = new IntegrationMetricSnapshot(
+                metric,
+                value,
+                DateTimeOffset.UtcNow);
+        });
+
+        await Task.WhenAll(tasks);
+    }
 
     public override async Task<IntegrationHealthStatus> PerformHealthCheck()
     {
