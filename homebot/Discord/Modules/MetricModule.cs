@@ -17,7 +17,7 @@ public class MetricModule(IntegrationMetricManager metrics)
         var card = new Card
         {
             Heading = "📊 Integration Metrics",
-            Accent = "#5865F2"
+            Accent = BrandColors.Metrics
         };
 
         card.Content.Add(new KeyValueBlock
@@ -32,9 +32,6 @@ public class MetricModule(IntegrationMetricManager metrics)
                 .ToList()
         });
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 }

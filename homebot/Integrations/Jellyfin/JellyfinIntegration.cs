@@ -5,18 +5,16 @@ namespace HomeBot.Integrations.Jellyfin;
 public sealed class JellyfinIntegration
     : BaseIntegration<JellyfinIntegration>, IMetricProvider
 {
+    private readonly IOptionsMonitor<JellyfinOptions> _options;
     private readonly JellyfinHttpClient _client;
 
+    private readonly MetricSet<ItemCounts> _metrics = new MetricSet<ItemCounts>()
+        .Add("episodes", "Total Episodes", d => d.EpisodeCount)
+        .Add("movies", "Total Movies", d => d.MovieCount)
+        .Add("series", "Total Series", d => d.SeriesCount);
+
     private ItemCounts? _itemCounts;
-
-    private readonly IIntegrationMetric _episodesMetric =
-        new IntegrationMetric("episodes", "Total Episodes");
-
-    private readonly IIntegrationMetric _moviesMetric =
-        new IntegrationMetric("movies", "Total Movies");
-
-    private readonly IIntegrationMetric _seriesMetric =
-        new IntegrationMetric("series", "Total Series");
+    private DateTimeOffset _lastRefreshed;
 
     public JellyfinIntegration(
         IOptionsMonitor<JellyfinOptions> options,
@@ -27,52 +25,34 @@ public sealed class JellyfinIntegration
                 "Jellyfin",
                 "Jellyfin integration"))
     {
-        _client = new JellyfinHttpClient(
-            options.CurrentValue.Endpoint,
-            options.CurrentValue.ApiKey);
+        _options = options;
+        _client = new JellyfinHttpClient(options.CurrentValue);
 
         logger.LogInformation("Jellyfin integration initialized.");
     }
 
-    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics =>
-    [
-        _episodesMetric,
-        _moviesMetric,
-        _seriesMetric
-    ];
+    IEnumerable<IIntegrationMetric> IMetricProvider.Metrics => _metrics.Metrics;
 
     IEnumerable<IntegrationMetricSnapshot> IMetricProvider.Snapshots =>
-    [
-        new(_episodesMetric, _itemCounts?.EpisodeCount, DateTimeOffset.UtcNow),
-        new(_moviesMetric, _itemCounts?.MovieCount, DateTimeOffset.UtcNow),
-        new(_seriesMetric, _itemCounts?.SeriesCount, DateTimeOffset.UtcNow)
-    ];
+        _metrics.Snapshot(_itemCounts, _lastRefreshed);
 
     public async Task RefreshAsync(
         CancellationToken cancellationToken = default)
     {
-        _itemCounts = await _client.GetItemCountsAsync();
+        _itemCounts = await _client.GetItemCountsAsync(cancellationToken);
+        _lastRefreshed = DateTimeOffset.UtcNow;
     }
 
-    public override async Task<IntegrationHealthStatus> PerformHealthCheck()
-    {
-        try
+    public override Task<IntegrationHealthStatus> PerformHealthCheck()
+        => ProbeHealthAsync(async () =>
         {
             var sysInfo = await _client.GetSystemInfoAsync();
+            return !sysInfo.IsShuttingDown;
+        });
 
-            return !sysInfo.IsShuttingDown
-                ? IntegrationHealthStatus.Healthy
-                : IntegrationHealthStatus.Unhealthy;
-        }
-        catch
-        {
-            return IntegrationHealthStatus.Unhealthy;
-        }
-    }
+    public Task<SystemInfo> GetSystemInfoAsync(CancellationToken cancellationToken = default)
+        => _client.GetSystemInfoAsync(cancellationToken);
 
-    public Task<SystemInfo> GetSystemInfoAsync()
-        => _client.GetSystemInfoAsync();
-
-    public Task<ItemCounts> GetItemCountsAsync()
-        => _client.GetItemCountsAsync();
+    public Task<ItemCounts> GetItemCountsAsync(CancellationToken cancellationToken = default)
+        => _client.GetItemCountsAsync(cancellationToken);
 }

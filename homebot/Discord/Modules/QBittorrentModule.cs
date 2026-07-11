@@ -18,7 +18,7 @@ public class QBittorrentModule(QBittorrentIntegration qbittorrent)
         var card = new Card
         {
             Heading = "⬇️ qBittorrent",
-            Accent = "#2F67BA",
+            Accent = BrandColors.QBittorrent,
             Content =
             [
                 new KeyValueBlock
@@ -35,10 +35,7 @@ public class QBittorrentModule(QBittorrentIntegration qbittorrent)
             ]
         };
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("transfers", "Show transfer statistics")]
@@ -49,7 +46,7 @@ public class QBittorrentModule(QBittorrentIntegration qbittorrent)
         var card = new Card
         {
             Heading = "📊 Transfer Statistics",
-            Accent = "#2F67BA",
+            Accent = BrandColors.QBittorrent,
             Content =
             [
                 new KeyValueBlock
@@ -67,10 +64,7 @@ public class QBittorrentModule(QBittorrentIntegration qbittorrent)
             ]
         };
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     [SubSlashCommand("torrents", "List all torrents")]
@@ -106,7 +100,7 @@ public class QBittorrentModule(QBittorrentIntegration qbittorrent)
         var card = new Card
         {
             Heading = $"{heading} ({torrents.Count})",
-            Accent = "#2F67BA"
+            Accent = BrandColors.QBittorrent
         };
 
         if (torrents.Count == 0)
@@ -145,10 +139,7 @@ public class QBittorrentModule(QBittorrentIntegration qbittorrent)
             }
         }
 
-        return new()
-        {
-            Embeds = [card.ToDiscordEmbed()]
-        };
+        return card.ToInteractionMessage();
     }
 
     private static string FormatSize(long bytes)

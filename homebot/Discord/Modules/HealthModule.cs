@@ -18,10 +18,10 @@ public class HealthModule(IntegrationManager integrationManager)
         var healthz = await integrationManager.PerformHealthChecks();
 
         var accent = healthz.Values.Contains(IntegrationHealthStatus.Unhealthy)
-            ? "#ED4245"
+            ? BrandColors.HealthUnhealthy
             : healthz.Values.Contains(IntegrationHealthStatus.Unknown)
-                ? "#FEE75C"
-                : "#57F287";
+                ? BrandColors.HealthUnknown
+                : BrandColors.HealthHealthy;
 
         var card = new Card
         {

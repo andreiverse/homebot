@@ -21,10 +21,13 @@ builder.Services
 //
 builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(
     builder.Configuration);
+
 builder.Services.AddIntegration<PrometheusIntegration, PrometheusOptions>(
     builder.Configuration);
+
 builder.Services.AddIntegration<QBittorrentIntegration, QBittorrentOptions>(
     builder.Configuration);
+
 builder.Services.AddSingleton<IntegrationManager>();
 
 builder.Services.AddSingleton<IntegrationMetricManager>();

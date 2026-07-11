@@ -12,7 +12,7 @@ public sealed class IntegrationMetric : IIntegrationMetric
         string? description = null)
     {
         Name = name;
-        Id = name.ToLower().Replace(" ", "_"); 
+        Id = name.ToLowerInvariant().Replace(" ", "_");
         Description = description;
     }
 
