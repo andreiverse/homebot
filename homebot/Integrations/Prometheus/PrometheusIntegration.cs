@@ -9,7 +9,6 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
     private readonly List<IIntegrationMetric> _metrics;
 
     public PrometheusIntegration(
-        PrometheusHttpClient client,
         IOptionsMonitor<PrometheusOptions> options,
         ILogger<PrometheusIntegration> logger)
         : base(
@@ -18,8 +17,8 @@ public sealed class PrometheusIntegration : BaseIntegration<PrometheusIntegratio
                 "Prometheus",
                 "Prometheus monitoring integration"))
     {
-        _client = client;
         _options = options;
+        _client = new PrometheusHttpClient(options.CurrentValue);
 
         logger.LogInformation("Prometheus integration initialized.");
 

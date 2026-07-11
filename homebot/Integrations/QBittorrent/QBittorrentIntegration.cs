@@ -1,8 +1,11 @@
+using Microsoft.Extensions.Options;
+
 namespace HomeBot.Integrations.QBittorrent;
 
 public sealed class QBittorrentIntegration
     : BaseIntegration<QBittorrentIntegration>, IMetricProvider
 {
+    private readonly IOptionsMonitor<QBittorrentOptions> _options;
     private readonly QBittorrentHttpClient _client;
 
     private readonly MetricSet<TransferInfo> _metrics = new MetricSet<TransferInfo>()
@@ -16,7 +19,7 @@ public sealed class QBittorrentIntegration
     private DateTimeOffset _lastRefreshed;
 
     public QBittorrentIntegration(
-        QBittorrentHttpClient client,
+        IOptionsMonitor<QBittorrentOptions> options,
         ILogger<QBittorrentIntegration> logger)
         : base(
             logger,
@@ -24,7 +27,8 @@ public sealed class QBittorrentIntegration
                 "qBittorrent",
                 "qBittorrent integration"))
     {
-        _client = client;
+        _options = options;
+        _client = new QBittorrentHttpClient(options.CurrentValue);
 
         logger.LogInformation("qBittorrent integration initialized.");
     }

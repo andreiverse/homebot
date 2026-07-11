@@ -1,12 +1,18 @@
+using Microsoft.Extensions.Options;
+
 namespace HomeBot.Integrations.Jellyfin;
 
 public sealed class JellyfinHttpClient
 {
     private readonly HttpClient _http;
 
-    public JellyfinHttpClient(HttpClient http)
+    public JellyfinHttpClient(JellyfinOptions options)
     {
-        _http = http;
+        _http = new HttpClient
+        {
+            BaseAddress = new Uri(options.Endpoint)
+        };
+        _http.DefaultRequestHeaders.Add("X-Emby-Token", options.ApiKey);
     }
 
     public Task<SystemInfo> GetSystemInfoAsync(CancellationToken cancellationToken = default)

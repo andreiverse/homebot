@@ -4,9 +4,12 @@ public sealed class PrometheusHttpClient
 {
     private readonly HttpClient _http;
 
-    public PrometheusHttpClient(HttpClient http)
+    public PrometheusHttpClient(PrometheusOptions prometheusOptions)
     {
-        _http = http;
+        _http = new HttpClient
+        {
+            BaseAddress = new Uri(prometheusOptions.Endpoint.TrimEnd('/'))
+        };
     }
 
     public async Task<bool> IsHealthyAsync(CancellationToken ct = default)

@@ -19,25 +19,12 @@ builder.Services
 //
 // Integrations
 //
-builder.Services.AddIntegrationHttpClient<JellyfinHttpClient, JellyfinOptions>((http, options) =>
-{
-    http.BaseAddress = new Uri(options.Endpoint);
-    http.DefaultRequestHeaders.Add("X-Emby-Token", options.ApiKey);
-});
 builder.Services.AddIntegration<JellyfinIntegration, JellyfinOptions>(
     builder.Configuration);
 
-builder.Services.AddIntegrationHttpClient<PrometheusHttpClient, PrometheusOptions>((http, options) =>
-{
-    http.BaseAddress = new Uri(options.Endpoint.TrimEnd('/'));
-});
 builder.Services.AddIntegration<PrometheusIntegration, PrometheusOptions>(
     builder.Configuration);
 
-builder.Services.AddIntegrationHttpClient<QBittorrentHttpClient, QBittorrentOptions>((http, options) =>
-{
-    http.BaseAddress = new Uri(options.Endpoint.TrimEnd('/') + "/");
-});
 builder.Services.AddIntegration<QBittorrentIntegration, QBittorrentOptions>(
     builder.Configuration);
 

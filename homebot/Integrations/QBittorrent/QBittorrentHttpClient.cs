@@ -5,9 +5,12 @@ public sealed class QBittorrentHttpClient
     private readonly HttpClient _http;
     private bool _authenticated;
 
-    public QBittorrentHttpClient(HttpClient http)
+    public QBittorrentHttpClient(QBittorrentOptions qBittorrentOptions)
     {
-        _http = http;
+        _http = new HttpClient
+        {
+            BaseAddress = new Uri(qBittorrentOptions.Endpoint.TrimEnd('/') + "/")
+        };
     }
 
     private Task AuthenticateAsync()

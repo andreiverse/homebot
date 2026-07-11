@@ -1,8 +1,11 @@
+using Microsoft.Extensions.Options;
+
 namespace HomeBot.Integrations.Jellyfin;
 
 public sealed class JellyfinIntegration
     : BaseIntegration<JellyfinIntegration>, IMetricProvider
 {
+    private readonly IOptionsMonitor<JellyfinOptions> _options;
     private readonly JellyfinHttpClient _client;
 
     private readonly MetricSet<ItemCounts> _metrics = new MetricSet<ItemCounts>()
@@ -14,7 +17,7 @@ public sealed class JellyfinIntegration
     private DateTimeOffset _lastRefreshed;
 
     public JellyfinIntegration(
-        JellyfinHttpClient client,
+        IOptionsMonitor<JellyfinOptions> options,
         ILogger<JellyfinIntegration> logger)
         : base(
             logger,
@@ -22,7 +25,8 @@ public sealed class JellyfinIntegration
                 "Jellyfin",
                 "Jellyfin integration"))
     {
-        _client = client;
+        _options = options;
+        _client = new JellyfinHttpClient(options.CurrentValue);
 
         logger.LogInformation("Jellyfin integration initialized.");
     }

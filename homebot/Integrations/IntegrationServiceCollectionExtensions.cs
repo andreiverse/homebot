@@ -1,29 +1,7 @@
-using Microsoft.Extensions.Options;
-
 namespace HomeBot.Integrations;
 
 public static class IntegrationServiceCollectionExtensions
 {
-    /// <summary>
-    /// Registers an integration's HTTP client as a typed client via <c>IHttpClientFactory</c>,
-    /// configured from the integration's options, instead of each integration constructing its
-    /// own <see cref="HttpClient"/>.
-    /// </summary>
-    public static IServiceCollection AddIntegrationHttpClient<THttpClient, TOptions>(
-        this IServiceCollection services,
-        Action<HttpClient, TOptions> configure)
-        where THttpClient : class
-        where TOptions : class, IIntegrationOptions
-    {
-        services.AddHttpClient<THttpClient>((sp, http) =>
-        {
-            var options = sp.GetRequiredService<IOptionsMonitor<TOptions>>().CurrentValue;
-            configure(http, options);
-        });
-
-        return services;
-    }
-
     public static IServiceCollection AddIntegration<TIntegration, TOptions>(
         this IServiceCollection services,
         IConfiguration configuration)
