@@ -8,12 +8,27 @@ public static class IntegrationServiceCollectionExtensions
         where TIntegration : class
         where TOptions : class, IIntegrationOptions
     {
-        services.Configure<TOptions>(
-            configuration.GetRequiredSection(TOptions.Section));
+        IConfigurationSection? configurationSection = null;
+
+        try
+        {
+            configurationSection = configuration.GetRequiredSection(TOptions.Section);
+        }
+        catch (InvalidOperationException)
+        {
+            // todo: print error
+        }
+
+        if (configurationSection == null)
+        {
+            return services;
+        }
+
+        services.Configure<TOptions>(configurationSection);
 
         var options = configuration
             .GetRequiredSection(TOptions.Section)
-            .Get<TOptions>(); 
+            .Get<TOptions>();
 
         if (options == null || !options.Enabled)
             return services;
@@ -24,11 +39,13 @@ public static class IntegrationServiceCollectionExtensions
         services.AddSingleton(sp =>
             (IIntegration)sp.GetRequiredService<TIntegration>());
         // register it as a metric provider
-        if (typeof(IMetricProvider).IsAssignableFrom(typeof(TIntegration))) {
+        if (typeof(IMetricProvider).IsAssignableFrom(typeof(TIntegration)))
+        {
             services.AddSingleton(sp =>
                 (IMetricProvider)sp.GetRequiredService<TIntegration>()
             );
         }
+
 
         return services;
     }
