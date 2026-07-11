@@ -16,8 +16,8 @@ public sealed class QBittorrentHttpClient
     private Task AuthenticateAsync()
     {
         _authenticated = true;
-        // if (_authenticated)
-        //     return;
+        if (_authenticated)
+            return Task.CompletedTask;
 
         // using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         // {
@@ -82,17 +82,4 @@ public sealed class QBittorrentHttpClient
         return await _http.GetFromJsonRequiredAsync<TransferInfo>("api/v2/transfer/info", cancellationToken);
     }
 
-
-    public async Task DeleteSearchAsync(int searchId, CancellationToken cancellationToken = default)
-    {
-        await AuthenticateAsync();
-
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["id"] = searchId.ToString()
-        });
-
-        var response = await _http.PostAsync("api/v2/search/delete", content, cancellationToken);
-        response.EnsureSuccessStatusCode();
-    }
 }

@@ -61,9 +61,6 @@ public sealed class QBittorrentIntegration
     public Task<Preferences> GetPreferencesAsync(CancellationToken cancellationToken = default)
         => _client.GetPreferencesAsync(cancellationToken);
 
-    public Task DeleteSearchAsync(int searchId, CancellationToken cancellationToken = default)
-        => _client.DeleteSearchAsync(searchId, cancellationToken);
-
     public Task<IReadOnlyList<TorrentInfo>> GetTorrentsAsync(
         string? filter = null,
         CancellationToken cancellationToken = default)
