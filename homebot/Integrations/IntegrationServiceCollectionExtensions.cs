@@ -1,7 +1,34 @@
+using System.Reflection;
+
 namespace HomeBot.Integrations;
 
 public static class IntegrationServiceCollectionExtensions
 {
+    
+    private static void RegisterImplementations(
+        IServiceCollection services,
+        Assembly assembly,
+        Type openGenericInterface)
+    {
+        foreach (var type in assembly.GetTypes())
+        {
+            if (!type.IsClass || type.IsAbstract)
+                continue;
+
+            foreach (var iface in type.GetInterfaces())
+            {
+                if (!iface.IsGenericType)
+                    continue;
+
+                if (iface.GetGenericTypeDefinition() != openGenericInterface)
+                    continue;
+
+                services.AddSingleton(type);
+                services.AddSingleton(iface, sp => sp.GetRequiredService(type));
+            }
+        }
+    }
+
     public static IServiceCollection AddIntegration<TIntegration, TOptions>(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -45,6 +72,13 @@ public static class IntegrationServiceCollectionExtensions
                 (IMetricProvider)sp.GetRequiredService<TIntegration>()
             );
         }
+
+
+        RegisterImplementations(
+            services,
+            typeof(TIntegration).Assembly,
+            typeof(IIntegrationWidget<>));
+
 
 
         return services;
