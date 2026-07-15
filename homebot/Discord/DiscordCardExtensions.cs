@@ -1,6 +1,7 @@
 using HomeBot.Display;
 using NetCord;
 using NetCord.Rest;
+using ScottPlot;
 
 namespace HomeBot.Discord;
 
@@ -22,7 +23,7 @@ public static class DiscordCardExtensions
             var hex = card.Accent.Trim().TrimStart('#');
 
             if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var rgb))
-                embed.WithColor(new Color(rgb));
+                embed.WithColor(new NetCord.Color(rgb));
         }
 
         if (card.Link is not null)
@@ -114,6 +115,12 @@ public static class DiscordCardExtensions
                 case DividerBlock:
                     // Discord embeds have no divider.
                     break;
+
+                case GraphBlock:
+                    // The rendered PNG will be attached as graph.png;
+                    // reference it here so Discord links the embed image.
+                    embed.WithImage(new EmbedImageProperties("attachment://graph.png"));
+                    break;
             }
         }
 
@@ -122,4 +129,59 @@ public static class DiscordCardExtensions
 
     public static InteractionMessageProperties ToInteractionMessage(this Card card)
         => new() { Embeds = [card.ToDiscordEmbed()] };
+
+    /// <summary>
+    /// Converts a <see cref="Card"/> to an <see cref="InteractionMessageProperties"/>.
+    /// If the card contains a <see cref="GraphBlock"/>, it is rendered to a PNG via ScottPlot
+    /// and attached to the message automatically.
+    /// </summary>
+    public static async Task<InteractionMessageProperties> ToInteractionMessageAsync(
+        this Card card,
+        CancellationToken ct = default)
+    {
+        var graphBlock = card.Content.OfType<GraphBlock>().FirstOrDefault();
+
+        if (graphBlock is null)
+            return card.ToInteractionMessage();
+
+        var stream = await RenderGraphAsync(graphBlock, ct);
+        var embed = card.ToDiscordEmbed(); // already wired to attachment://graph.png
+
+        return new()
+        {
+            Embeds = [embed],
+            Attachments = [new AttachmentProperties("graph.png", stream)]
+        };
+    }
+
+    private static async Task<MemoryStream> RenderGraphAsync(GraphBlock graph, CancellationToken ct)
+    {
+        var plot = new Plot();
+
+        foreach (var series in graph.Series)
+        {
+            var scatter = plot.Add.Scatter(series.Xs, series.Ys);
+            scatter.LineWidth = 5;
+
+            if (series.Name is not null)
+                scatter.LegendText = series.Name;
+        }
+
+        plot.Title(graph.Title);
+        plot.XLabel(graph.XLabel);
+        plot.YLabel(graph.YLabel);
+
+        if (graph.IsDateTimeAxis)
+            plot.Axes.DateTimeTicksBottom();
+
+        plot.Axes.AutoScale();
+
+        var file = Path.GetTempFileName() + ".png";
+        plot.SavePng(file, 800, 400);
+
+        var bytes = await File.ReadAllBytesAsync(file, ct);
+        File.Delete(file);
+
+        return new MemoryStream(bytes);
+    }
 }

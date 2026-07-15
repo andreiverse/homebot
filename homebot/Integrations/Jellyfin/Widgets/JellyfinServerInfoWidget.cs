@@ -1,52 +1,26 @@
 using HomeBot.Display;
+using HomeBot.Discord;
 
 namespace HomeBot.Integrations.Jellyfin.Widgets;
 
-public class JellyfinServerInfoWidget : IIntegrationWidget<JellyfinIntegration>
+public class JellyfinServerInfoWidget(JellyfinIntegration jellyfin) : IWidget
 {
-    public string Id => "serverinfo";
+    public string Id => "jellyfin.serverinfo";
     public string Name => "Server Info";
     public string? Description => "Shows useful Jellyfin server info";
 
-    public async Task<Card> RenderAsync(JellyfinIntegration instance, CancellationToken cancellationToken = default)
+    public async Task<Card> RenderAsync(CancellationToken ct = default)
     {
-        var sysInfo = await instance.GetSystemInfoAsync();
+        var sysInfo = await jellyfin.GetSystemInfoAsync(ct);
 
-        return new Card
-        {
-            Heading = "📺 Jellyfin Server",
-            Content =
-            [
-                new KeyValueBlock
-                {
-                    Items =
-                    [
-                        new()
-                        {
-                            Key = "Server",
-                            Value = sysInfo.ServerName
-                        },
-                        new()
-                        {
-                            Key = "Version",
-                            Value = sysInfo.Version
-                        },
-                        new()
-                        {
-                            Key = "Product",
-                            Value = sysInfo.ProductName
-                        },
-                        new()
-                        {
-                            Key = "Update",
-                            Value = sysInfo.HasUpdateAvailable
-                                ? "🟡 Available"
-                                : "🟢 Up to date"
-                        }
-                    ]
-                }
-            ]
-        };
-
+        return new Card()
+            .WithHeading("📺 Jellyfin Server")
+            .WithAccent(BrandColors.Jellyfin)
+            .AddKeyValueBlock(kv => kv
+                .Add("Server", sysInfo.ServerName)
+                .Add("Version", sysInfo.Version)
+                .Add("Product", sysInfo.ProductName)
+                .Add("Update", sysInfo.HasUpdateAvailable ? "🟡 Available" : "🟢 Up to date")
+            );
     }
 }

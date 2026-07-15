@@ -4,28 +4,27 @@ namespace HomeBot.Integrations;
 
 public static class IntegrationServiceCollectionExtensions
 {
-    
-    private static void RegisterImplementations(
-        IServiceCollection services,
-        Assembly assembly,
-        Type openGenericInterface)
+    /// <summary>
+    /// Scans <paramref name="assembly"/> for all concrete <see cref="IWidget"/> implementations
+    /// and registers each as transient under both its concrete type and <see cref="IWidget"/>.
+    /// Transient lifetime is required because widgets have mutable properties that are set
+    /// per-request before calling <see cref="IWidget.RenderAsync"/>.
+    /// </summary>
+    private static void RegisterWidgets(IServiceCollection services, Assembly assembly)
     {
         foreach (var type in assembly.GetTypes())
         {
             if (!type.IsClass || type.IsAbstract)
                 continue;
 
-            foreach (var iface in type.GetInterfaces())
-            {
-                if (!iface.IsGenericType)
-                    continue;
+            if (!typeof(IWidget).IsAssignableFrom(type))
+                continue;
 
-                if (iface.GetGenericTypeDefinition() != openGenericInterface)
-                    continue;
+            // Register the concrete type so modules can inject e.g. JellyfinServerInfoWidget.
+            services.AddTransient(type);
 
-                services.AddSingleton(type);
-                services.AddSingleton(iface, sp => sp.GetRequiredService(type));
-            }
+            // Also register as IWidget so consumers can resolve IEnumerable<IWidget>.
+            services.AddTransient(typeof(IWidget), sp => sp.GetRequiredService(type));
         }
     }
 
@@ -47,9 +46,7 @@ public static class IntegrationServiceCollectionExtensions
         }
 
         if (configurationSection == null)
-        {
             return services;
-        }
 
         services.Configure<TOptions>(configurationSection);
 
@@ -60,26 +57,20 @@ public static class IntegrationServiceCollectionExtensions
         if (options == null || !options.Enabled)
             return services;
 
-        // register specific Type
+        // Register the integration as its concrete type.
         services.AddSingleton<TIntegration>();
-        // register Interface
-        services.AddSingleton(sp =>
-            (IIntegration)sp.GetRequiredService<TIntegration>());
-        // register it as a metric provider
+
+        // Register as IIntegration for generic consumers.
+        services.AddSingleton(sp => (IIntegration)sp.GetRequiredService<TIntegration>());
+
+        // Register as IMetricProvider if applicable.
         if (typeof(IMetricProvider).IsAssignableFrom(typeof(TIntegration)))
         {
             services.AddSingleton(sp =>
-                (IMetricProvider)sp.GetRequiredService<TIntegration>()
-            );
+                (IMetricProvider)sp.GetRequiredService<TIntegration>());
         }
 
-
-        RegisterImplementations(
-            services,
-            typeof(TIntegration).Assembly,
-            typeof(IIntegrationWidget<>));
-
-
+        RegisterWidgets(services, typeof(TIntegration).Assembly);
 
         return services;
     }
