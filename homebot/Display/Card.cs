@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace HomeBot.Display;
 
 public class Card
@@ -197,6 +199,14 @@ public class KeyValueBlockBuilder
     }
 }
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(TextBlock), typeDiscriminator: "text")]
+[JsonDerivedType(typeof(KeyValueBlock), typeDiscriminator: "keyValue")]
+[JsonDerivedType(typeof(MediaBlock), typeDiscriminator: "media")]
+[JsonDerivedType(typeof(ListBlock), typeDiscriminator: "list")]
+[JsonDerivedType(typeof(CodeBlock), typeDiscriminator: "code")]
+[JsonDerivedType(typeof(DividerBlock), typeDiscriminator: "divider")]
+[JsonDerivedType(typeof(GraphBlock), typeDiscriminator: "graph")]
 public abstract class ContentBlock;
 
 public class TextBlock : ContentBlock

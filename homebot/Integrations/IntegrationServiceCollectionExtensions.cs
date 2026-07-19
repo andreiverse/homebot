@@ -10,7 +10,7 @@ public static class IntegrationServiceCollectionExtensions
     /// Transient lifetime is required because widgets have mutable properties that are set
     /// per-request before calling <see cref="IWidget.RenderAsync"/>.
     /// </summary>
-    private static void RegisterWidgets(IServiceCollection services, Assembly assembly)
+    private static void RegisterWidgets(IServiceCollection services, Assembly assembly, Type integrationType)
     {
         foreach (var type in assembly.GetTypes())
         {
@@ -18,6 +18,9 @@ public static class IntegrationServiceCollectionExtensions
                 continue;
 
             if (!typeof(IWidget).IsAssignableFrom(type))
+                continue;
+
+            if (type.Namespace == null || integrationType.Namespace == null || !type.Namespace.StartsWith(integrationType.Namespace))
                 continue;
 
             // Register the concrete type so modules can inject e.g. JellyfinServerInfoWidget.
@@ -70,7 +73,7 @@ public static class IntegrationServiceCollectionExtensions
                 (IMetricProvider)sp.GetRequiredService<TIntegration>());
         }
 
-        RegisterWidgets(services, typeof(TIntegration).Assembly);
+        RegisterWidgets(services, typeof(TIntegration).Assembly, typeof(TIntegration));
 
         return services;
     }

@@ -1,0 +1,40 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "vite --port=3001",
+    "build": "vite build",
+    "serve": "vite preview",
+    "start": "vite",
+    "generate:api": "orval"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/router-plugin": "^1.117.2",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.2",
+    "orval": "^8.22.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^6.0.3"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-router": "^1.117.1",
+    "@tanstack/router-devtools": "^1.117.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.25.0",
+    "radix-ui": "^1.6.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "shadcn": "^4.13.1",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0"
+  }
+}

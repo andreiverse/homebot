@@ -1,0 +1,460 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "homebot | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/widgets/cards": {
+      "get": {
+        "tags": [
+          "homebot"
+        ],
+        "operationId": "GetWidgetCards",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WidgetSnapshotDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/widgets/actions": {
+      "post": {
+        "tags": [
+          "homebot"
+        ],
+        "operationId": "ExecuteWidgetAction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionItem": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uri"
+          },
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ActionRequestDto": {
+        "required": [
+          "actionId",
+          "label",
+          "parameter"
+        ],
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "parameter": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ActionResponseDto": {
+        "required": [
+          "success",
+          "message",
+          "updatedCard"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "updatedCard": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Card"
+              }
+            ]
+          }
+        }
+      },
+      "Card": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "link": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uri"
+          },
+          "createdAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentBlock"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionItem"
+            }
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/Metadata"
+          }
+        }
+      },
+      "ContentBlock": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ContentBlockTextBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ContentBlockKeyValueBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ContentBlockMediaBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ContentBlockListBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ContentBlockCodeBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ContentBlockDividerBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ContentBlockGraphBlock"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "text": "#/components/schemas/ContentBlockTextBlock",
+            "keyValue": "#/components/schemas/ContentBlockKeyValueBlock",
+            "media": "#/components/schemas/ContentBlockMediaBlock",
+            "list": "#/components/schemas/ContentBlockListBlock",
+            "code": "#/components/schemas/ContentBlockCodeBlock",
+            "divider": "#/components/schemas/ContentBlockDividerBlock",
+            "graph": "#/components/schemas/ContentBlockGraphBlock"
+          }
+        }
+      },
+      "ContentBlockCodeBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "code"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ContentBlockDividerBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "divider"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "ContentBlockGraphBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "graph"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "xLabel": {
+            "type": "string"
+          },
+          "yLabel": {
+            "type": "string"
+          },
+          "isDateTimeAxis": {
+            "type": "boolean"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphSeries"
+            }
+          }
+        }
+      },
+      "ContentBlockKeyValueBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "keyValue"
+            ],
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KeyValueItem"
+            }
+          }
+        }
+      },
+      "ContentBlockListBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "list"
+            ],
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ContentBlockMediaBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "media"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ContentBlockTextBlock": {
+        "properties": {
+          "type": {
+            "enum": [
+              "text"
+            ],
+            "type": "string"
+          },
+          "heading": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "GraphSeries": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "xs": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          "ys": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          }
+        }
+      },
+      "KeyValueItem": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "Metadata": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "footer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "WidgetSnapshotDto": {
+        "required": [
+          "widgetId",
+          "widgetName",
+          "widgetDescription",
+          "card"
+        ],
+        "type": "object",
+        "properties": {
+          "widgetId": {
+            "type": "string"
+          },
+          "widgetName": {
+            "type": "string"
+          },
+          "widgetDescription": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "homebot"
+    }
+  ]
+}
