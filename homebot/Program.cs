@@ -4,6 +4,9 @@ using HomeBot.Integrations;
 using HomeBot.Integrations.Jellyfin;
 using HomeBot.Integrations.Prometheus;
 using HomeBot.Integrations.QBittorrent;
+using HomeBot.Mcp;
+using ModelContextProtocol.AspNetCore;
+using ModelContextProtocol.Server;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
@@ -16,16 +19,6 @@ builder.Services.AddOpenApi();
 var isOpenApiGeneration = Environment.CommandLine.Contains("getdocument", StringComparison.OrdinalIgnoreCase) ||
                           (System.Reflection.Assembly.GetEntryAssembly()?.FullName ?? "").Contains("getdocument", StringComparison.OrdinalIgnoreCase) ||
                           Environment.StackTrace.Contains("GetDocument", StringComparison.OrdinalIgnoreCase);
-
-if (!isOpenApiGeneration)
-{
-    //
-    // Discord
-    //
-    builder.Services
-        .AddDiscordGateway()
-        .AddApplicationCommands();
-}
 
 //
 // Integrations
@@ -46,11 +39,42 @@ builder.Services.AddSingleton<IntegrationMetricManager>();
 if (!isOpenApiGeneration)
 {
     builder.Services.AddHostedService<IntegrationMetricRefreshService>();
-    builder.Services.AddHostedService<DiscordMetricChannelService>();
 }
 
 builder.Services.Configure<DiscordOptions>(
     builder.Configuration.GetSection("Discord"));
+
+var discordEnabled = builder.Configuration.GetSection("Discord").Get<DiscordOptions>()?.Enabled == true;
+
+if (!isOpenApiGeneration && discordEnabled)
+{
+    //
+    // Discord
+    //
+    builder.Services
+        .AddDiscordGateway()
+        .AddApplicationCommands();
+    Console.WriteLine("hello");
+    builder.Services.AddHostedService<DiscordMetricChannelService>();
+}
+
+//
+// MCP Server
+//
+var tempProvider = builder.Services.BuildServiceProvider();
+var tools = WidgetMcpToolSource.CreateToolsFromWidgets(tempProvider);
+
+builder.Services
+    .AddMcpServer(options =>
+    {
+        options.ServerInfo = new()
+        {
+            Name = "homebot",
+            Version = "1.0.0"
+        };
+    })
+    .WithHttpTransport()
+    .WithTools(tools);
 
 //
 // Build
@@ -63,6 +87,11 @@ app.UseCors(policy => policy
     .AllowAnyOrigin()
     .AllowAnyHeader()
     .AllowAnyMethod());
+
+//
+// MCP endpoint — register widget-based tools dynamically
+//
+app.MapMcp("/mcp");
 
 app.MapGet("/api/widgets/cards", async (IEnumerable<IWidget> widgets, CancellationToken ct) =>
 {
@@ -91,9 +120,9 @@ app.MapPost("/api/widgets/actions", async (ActionRequestDto request, IEnumerable
 .Produces<ActionResponseDto>(StatusCodes.Status200OK);
 
 //
-// Register Discord modules only when not generating OpenAPI
+// Register Discord modules only when enabled
 //
-if (!isOpenApiGeneration)
+if (!isOpenApiGeneration && discordEnabled)
 {
     app.AddModules(typeof(Program).Assembly);
 }

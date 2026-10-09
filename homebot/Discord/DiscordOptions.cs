@@ -2,6 +2,7 @@ namespace HomeBot.Discord;
 
 public sealed class DiscordOptions
 {
+    public bool Enabled { get; init; }
     public List<MetricChannelOptions> MetricChannels { get; init; } = [];
 }
 

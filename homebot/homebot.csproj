@@ -14,6 +14,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
     <PackageReference Include="NetCord" Version="1.0.0-beta.9" />
     <PackageReference Include="NetCord.Hosting" Version="1.0.0-beta.9" />
     <PackageReference Include="NetCord.Hosting.AspNetCore" Version="1.0.0-beta.9" />
