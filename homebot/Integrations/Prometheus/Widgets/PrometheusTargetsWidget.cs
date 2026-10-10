@@ -9,6 +9,7 @@ public class PrometheusTargetsWidget(PrometheusIntegration prometheus) : IWidget
     public string Name => "Scrape Targets";
     public string? Description => "Shows scrape target status";
 
+    public bool McpEnabled => true;
     public async Task<Card> RenderAsync(CancellationToken ct = default)
     {
         var targets = await prometheus.GetTargetsAsync(ct);

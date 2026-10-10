@@ -8,6 +8,7 @@ public class PrometheusAlertsWidget(PrometheusIntegration prometheus) : IWidget
     public string Id => "prometheus.alerts";
     public string Name => "Active Alerts";
     public string? Description => "Shows active Prometheus alerts";
+    public bool McpEnabled => true;
 
     public async Task<Card> RenderAsync(CancellationToken ct = default)
     {

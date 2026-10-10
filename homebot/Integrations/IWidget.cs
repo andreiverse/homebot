@@ -13,5 +13,11 @@ public interface IWidget
     string Name { get; }
     string? Description { get; }
 
-    Task<Card> RenderAsync(CancellationToken ct = default);
+    bool McpEnabled { get; }
+
+    Type? OptionsType => null;
+
+    Task<Card> RenderAsync(object? options = null, CancellationToken ct = default) => RenderAsync(ct);
+    
+    Task<Card> RenderAsync(CancellationToken ct = default) => RenderAsync(null, ct);
 }

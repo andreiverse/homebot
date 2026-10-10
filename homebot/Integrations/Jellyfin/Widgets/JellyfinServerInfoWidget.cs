@@ -9,6 +9,8 @@ public class JellyfinServerInfoWidget(JellyfinIntegration jellyfin) : IWidget
     public string Name => "Server Info";
     public string? Description => "Shows useful Jellyfin server info";
 
+
+    public bool McpEnabled => true;
     public async Task<Card> RenderAsync(CancellationToken ct = default)
     {
         var sysInfo = await jellyfin.GetSystemInfoAsync(ct);

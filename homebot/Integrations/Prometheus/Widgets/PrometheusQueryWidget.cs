@@ -3,14 +3,23 @@ using HomeBot.Discord;
 
 namespace HomeBot.Integrations.Prometheus.Widgets;
 
+public record PrometheusQueryWidgetOptions(string Query = "up");
+
 public class PrometheusQueryWidget(PrometheusIntegration prometheus) : IWidget
 {
     public string Id => "prometheus.query";
     public string Name => "PromQL Query";
     public string? Description => "Executes a PromQL query and shows the result";
 
-    public Task<Card> RenderAsync(CancellationToken ct = default)
-        => RenderAsync("up", ct);
+    public bool McpEnabled => true;
+
+    public Type? OptionsType => typeof(PrometheusQueryWidgetOptions);
+
+    public Task<Card> RenderAsync(object? options = null, CancellationToken ct = default)
+    {
+        var opt = options as PrometheusQueryWidgetOptions ?? new PrometheusQueryWidgetOptions();
+        return RenderAsync(opt.Query, ct);
+    }
 
     public async Task<Card> RenderAsync(string query, CancellationToken ct = default)
     {

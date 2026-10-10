@@ -8,7 +8,7 @@ public class PrometheusInfoWidget(PrometheusIntegration prometheus) : IWidget
     public string Id => "prometheus.info";
     public string Name => "Prometheus Info";
     public string? Description => "Shows Prometheus runtime information";
-
+    public bool McpEnabled => true;
     public async Task<Card> RenderAsync(CancellationToken ct = default)
     {
         var runtime = await prometheus.GetRuntimeInfoAsync(ct);

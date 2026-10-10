@@ -144,7 +144,7 @@ public static class DiscordCardExtensions
         if (graphBlock is null)
             return card.ToInteractionMessage();
 
-        var stream = await RenderGraphAsync(graphBlock, ct);
+        var stream = card.ImageStream!;
         var embed = card.ToDiscordEmbed(); // already wired to attachment://graph.png
 
         return new()
@@ -154,34 +154,4 @@ public static class DiscordCardExtensions
         };
     }
 
-    private static async Task<MemoryStream> RenderGraphAsync(GraphBlock graph, CancellationToken ct)
-    {
-        var plot = new Plot();
-
-        foreach (var series in graph.Series)
-        {
-            var scatter = plot.Add.Scatter(series.Xs, series.Ys);
-            scatter.LineWidth = 5;
-
-            if (series.Name is not null)
-                scatter.LegendText = series.Name;
-        }
-
-        plot.Title(graph.Title);
-        plot.XLabel(graph.XLabel);
-        plot.YLabel(graph.YLabel);
-
-        if (graph.IsDateTimeAxis)
-            plot.Axes.DateTimeTicksBottom();
-
-        plot.Axes.AutoScale();
-
-        var file = Path.GetTempFileName() + ".png";
-        plot.SavePng(file, 800, 400);
-
-        var bytes = await File.ReadAllBytesAsync(file, ct);
-        File.Delete(file);
-
-        return new MemoryStream(bytes);
-    }
 }

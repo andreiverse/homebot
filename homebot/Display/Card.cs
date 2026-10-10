@@ -18,7 +18,15 @@ public class Card
     public List<ActionItem> Actions { get; set; } = [];
     public Metadata Metadata { get; set; } = new();
 
+    public Stream? ImageStream { get; set; }
+
     // Fluent API / Builder Methods
+
+    public Card WithImageStream(Stream? imageStream)
+    {
+        ImageStream = imageStream;
+        return this;
+    }
 
     public Card WithHeading(string? heading)
     {
@@ -134,7 +142,7 @@ public class Card
         var pts = points.ToList();
         return AddGraph(
             title,
-            xs: pts.Select(p => p.Time.UtcDateTime.ToOADate()).ToArray(),
+            xs: pts.Select(p => (double)p.Time.ToUnixTimeMilliseconds()).ToArray(),
             ys: pts.Select(p => p.Value).ToArray(),
             isDateTimeAxis: true,
             xLabel: "Time",
@@ -249,6 +257,7 @@ public class GraphBlock : ContentBlock
     public bool IsDateTimeAxis { get; set; }
 
     public List<GraphSeries> Series { get; set; } = [];
+    public Stream Stream { get; set; }
 }
 
 public class GraphSeries

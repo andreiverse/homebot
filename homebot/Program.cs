@@ -5,13 +5,16 @@ using HomeBot.Integrations.Jellyfin;
 using HomeBot.Integrations.Prometheus;
 using HomeBot.Integrations.QBittorrent;
 using HomeBot.Mcp;
-using ModelContextProtocol.AspNetCore;
-using ModelContextProtocol.Server;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new StreamBase64Converter());
+});
 
 builder.Services.AddCors();
 builder.Services.AddOpenApi();

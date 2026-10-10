@@ -2,8 +2,11 @@ using HomeBot.Display;
 using HomeBot.Discord;
 using Microsoft.Extensions.Options;
 using System.Globalization;
+using ScottPlot;
 
 namespace HomeBot.Integrations.Prometheus.Widgets;
+
+public record PrometheusGraphWidgetOptions(string Query = "up", int Hours = 1);
 
 public class PrometheusGraphWidget(
     PrometheusIntegration prometheus,
@@ -11,12 +14,54 @@ public class PrometheusGraphWidget(
 {
     private readonly PrometheusOptions _options = options.Value;
 
+    public bool McpEnabled => false;
+
     public string Id => "prometheus.graph";
     public string Name => "Prometheus Graph";
     public string? Description => "Renders a Prometheus metric as a time-series graph";
 
-    public Task<Card> RenderAsync(CancellationToken ct = default)
-        => RenderAsync("up", 1, ct);
+    public Type? OptionsType => typeof(PrometheusGraphWidgetOptions);
+
+    public Task<Card> RenderAsync(object? options = null, CancellationToken ct = default)
+    {
+        var opt = options as PrometheusGraphWidgetOptions ?? new PrometheusGraphWidgetOptions();
+        return RenderAsync(opt.Query, opt.Hours, ct);
+    }
+
+    private static async Task<MemoryStream> RenderGraphAsync(GraphBlock graph, CancellationToken ct)
+    {
+        var plot = new Plot();
+
+        foreach (var series in graph.Series)
+        {
+            var xs = graph.IsDateTimeAxis
+                ? series.Xs.Select(x => DateTimeOffset.FromUnixTimeMilliseconds((long)x).UtcDateTime.ToOADate()).ToArray()
+                : series.Xs;
+
+            var scatter = plot.Add.Scatter(xs, series.Ys);
+            scatter.LineWidth = 5;
+
+            if (series.Name is not null)
+                scatter.LegendText = series.Name;
+        }
+
+        plot.Title(graph.Title);
+        plot.XLabel(graph.XLabel);
+        plot.YLabel(graph.YLabel);
+
+        if (graph.IsDateTimeAxis)
+            plot.Axes.DateTimeTicksBottom();
+
+        plot.Axes.AutoScale();
+
+        var file = Path.GetTempFileName() + ".png";
+        plot.SavePng(file, 800, 400);
+
+        var bytes = await File.ReadAllBytesAsync(file, ct);
+        File.Delete(file);
+
+        return new MemoryStream(bytes);
+    }
 
     public async Task<Card> RenderAsync(
         string query,
@@ -62,10 +107,7 @@ public class PrometheusGraphWidget(
             if (metric.Values.Count == 0) continue;
 
             double[] xs = metric.Values
-                .Select(v => DateTimeOffset
-                    .FromUnixTimeMilliseconds((long)(v[0].GetDouble() * 1000))
-                    .UtcDateTime
-                    .ToOADate())
+                .Select(v => v[0].GetDouble() * 1000) // Keep as Unix milliseconds
                 .ToArray();
 
             double[] ys = metric.Values
@@ -83,6 +125,7 @@ public class PrometheusGraphWidget(
             .WithHeading("📈 Prometheus Graph")
             .WithAccent(BrandColors.Prometheus)
             .AddCodeBlock(query, "promql")
-            .AddContent(graph);
+            // .AddContent(graph)
+            .WithImageStream(await RenderGraphAsync(graph, ct));
     }
 }

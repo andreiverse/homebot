@@ -9,6 +9,8 @@ public class JellyfinItemCountWidget(JellyfinIntegration jellyfin) : IWidget
     public string Name => "Library Item Counts";
     public string? Description => "Shows Jellyfin library item counts";
 
+
+    public bool McpEnabled => true;
     public async Task<Card> RenderAsync(CancellationToken ct = default)
     {
         var counts = await jellyfin.GetItemCountsAsync(ct);

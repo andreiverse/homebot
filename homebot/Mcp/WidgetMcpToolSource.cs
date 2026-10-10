@@ -17,6 +17,7 @@ public static class WidgetMcpToolSource
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new StreamBase64Converter() }
     };
 
     /// <summary>
@@ -40,29 +41,56 @@ public static class WidgetMcpToolSource
             var id = widget.Id;
             var name = widget.Name;
             var description = widget.Description ?? $"Renders the {name} widget";
+            description += "\n\nIMPORTANT: If the returned JSON contains an 'imageStream' field with a base64 Data URI, you MUST display it to the user in your response using standard Markdown image syntax: ![Widget Image](data:image/png;base64,...)";
 
-            tools.Add(McpServerTool.Create(
-                async (IServiceProvider sp, CancellationToken ct) =>
-                {
-                    // Resolve a fresh transient widget from the per-call scope
-                    var w = (IWidget)sp.GetRequiredService(concreteType);
-                    return await RenderWidgetAsync(w, ct);
-                },
-                new McpServerToolCreateOptions
-                {
-                    Name = id,
-                    Title = name,
-                    Description = description,
-                }));
+            if (widget.OptionsType != null)
+            {
+                var method = typeof(WidgetMcpToolSource).GetMethod(nameof(CreateToolWithOptions), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+                var genericMethod = method.MakeGenericMethod(widget.OptionsType);
+                var tool = (McpServerTool)genericMethod.Invoke(null, [concreteType, id, name, description])!;
+                tools.Add(tool);
+            }
+            else
+            {
+                tools.Add(McpServerTool.Create(
+                    async (IServiceProvider sp, CancellationToken ct) =>
+                    {
+                        var w = (IWidget)sp.GetRequiredService(concreteType);
+                        return await RenderWidgetAsync(w, null, ct);
+                    },
+                    new McpServerToolCreateOptions
+                    {
+                        Name = id,
+                        Title = name,
+                        Description = description,
+                    }));
+            }
         }
 
         return tools;
     }
 
-    private static async Task<string> RenderWidgetAsync(
-        IWidget widget, CancellationToken ct)
+    private static McpServerTool CreateToolWithOptions<TOptions>(
+        Type concreteType, string id, string name, string description)
     {
-        var card = await widget.RenderAsync(ct);
+        return McpServerTool.Create(
+            async (TOptions options, IServiceProvider sp, CancellationToken ct) =>
+            {
+                var w = (IWidget)sp.GetRequiredService(concreteType);
+                return await RenderWidgetAsync(w, options, ct);
+            },
+            new McpServerToolCreateOptions
+            {
+                Name = id,
+                Title = name,
+                Description = description,
+            });
+    }
+
+    private static async Task<string> RenderWidgetAsync(
+        IWidget widget, object? options, CancellationToken ct)
+    {
+        var card = await widget.RenderAsync(options, ct);
 
         var snapshot = new WidgetSnapshotDto(
             widget.Id,

@@ -185,6 +185,16 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/Metadata"
+          },
+          "imageStream": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Stream"
+              }
+            ]
           }
         }
       },
@@ -283,6 +293,9 @@
             "items": {
               "$ref": "#/components/schemas/GraphSeries"
             }
+          },
+          "stream": {
+            "$ref": "#/components/schemas/Stream"
           }
         }
       },
@@ -423,6 +436,10 @@
             ]
           }
         }
+      },
+      "Stream": {
+        "type": "string",
+        "format": "binary"
       },
       "WidgetSnapshotDto": {
         "required": [
